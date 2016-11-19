@@ -1,8 +1,10 @@
-# -*- encoding: utf-8 -*-
+# -*- coding: utf-8 -*-
 IsDrawing = False
 IsPanelMoving = False
 
 CurrentPolygon = 3
+CurrentBrushStyle = TRANSPARENT
+CurrentPenStyle = SOLID
 
 Description = "Векторный графический редактор"
 
@@ -15,8 +17,6 @@ def OnFrameResize(evt):
 
 	x, y = DrawPanel.GetPosition()
 	sw, sh = DrawPanel.GetSize()
-
-	#print("RESIZING:", x, y, w, sw, w-sw, h, sh, h-sh)
 
 	if x < w-sw:
 		x = w-sw
@@ -34,8 +34,6 @@ def OnFrameResize(evt):
 		sh = h
 
 	DrawPanel.Move(Point(x, y))
-	#DrawPanel.SetSize(Size(sw, sh))
-	#print(Paint.MinW, Paint.MinH, sw, sh)
 	
 	x, y = PaintParameters.GetPosition()
 	PaintParameters.SetSize(Size(114, h-y))
@@ -45,7 +43,6 @@ def OnFrameResize(evt):
 
 def OnPaint(evt):
 
-	#Paint.Clear()
 	Redraw()
 
 SavingClickCoords = []
@@ -53,14 +50,11 @@ def OnPaintMouseDown(evt):
 
 	global CurrentFigure, CurrentTool, IsDrawing, SavingClickCoords, IsPanelMoving, CurrentPolygon
 
-	#print(CurrentTool.Name, CurrentTool.Name == "Move")
-
 	if CurrentTool.IsDrawTool != False:
 
 		IsDrawing = True
-		#print(True)
 
-		SavingClickCoords = [evt.GetPosition().x, evt.GetPosition().y]
+		SavingClickCoords = [evt.GetPosition().x, evt.GetPosition().y, GetMousePosition().x, GetMousePosition().y]
 
 		CurrentFigure = Figure()
 		CurrentFigure.Points.append([evt.GetPosition().x, evt.GetPosition().y])
@@ -72,13 +66,14 @@ def OnPaintMouseDown(evt):
 		CurrentFigure.BrushColor = CurrentColour[1]
 		CurrentFigure.BrushSize = CurrentToolSize*(CurrentZoom/100)
 		CurrentFigure.Polygons = CurrentPolygon
+		CurrentFigure.PenStyle = CurrentPenStyle
+		CurrentFigure.BrushStyle = CurrentBrushStyle
 
 		OnPaintMouseMove(evt)
 
 	elif CurrentTool.Name == "Move":
 
 		IsPanelMoving = True
-		#print(IsDrawing)
 		SavingClickCoords = [GetMousePosition().x, GetMousePosition().y, DrawPanel.GetPosition().x, DrawPanel.GetPosition().y]
 
 
@@ -88,26 +83,22 @@ def OnPaintMouseUp(evt):
 
 	IsDrawing = False
 	IsPanelMoving = False
-	#print(IsDrawing, "ON UP")
 
-	#print(evt.GetPosition().y, CurrentTool == Pen)
 	if CurrentTool.IsDrawTool != None:
 
 		CurrentFigure = None
+
+		Redraw(True)
 
 
 
 def OnPaintMouseMove(evt):
 
 	global IsDrawing, IsPanelMoving
-	#print(IsPanelMoving)
-	#print(CurrentColour[0], CurrentColour[1], CurrentToolSize, CurrentZoom)
-	#print(DrawPanel.ScreenToClient(GetMousePosition()))
-	#print(IsDrawing)
+
 	if IsDrawing == True:
 
 		global CurrentFigure, CurrentTool, SavingClickCoords
-		#print(CurrentTool, Pen)
 
 		if CurrentTool.Continious == True:
 		
@@ -115,34 +106,28 @@ def OnPaintMouseMove(evt):
 		
 		else:
 
+			ax, ay = DrawPanel.GetPosition()
+
 			x, y = SavingClickCoords[0], SavingClickCoords[1]
-			w, h = evt.GetPosition()
+			w, h = evt.GetPosition().x, evt.GetPosition().y
 
 			CurrentFigure.Points[0] = [x, y]
 			CurrentFigure.Points[1] = [w, h]
+			print(x, y, w, h)
 
-		Redraw(True)
+		Redraw()
 
 	if IsPanelMoving == True:
-
-		#Redraw()
 
 		w, h = DrawScroller.GetSize()
 		sw, sh = DrawPanel.GetSize()
 
-		#print(w, h, sw, sh, w < sw or h < sh)
-		#print(SavingClickCoords[2], SavingClickCoords[3])
-		#print("\n")
-
 		if w < sw or h < sh or SavingClickCoords[2] < 0 or SavingClickCoords[3] < 0 :
 
 			curX, curY = GetMousePosition()
-			difX, difY = curX-SavingClickCoords[0], curY-SavingClickCoords[1]
-			#print(SavingClickCoords[0], SavingClickCoords[1], curX, curY)
-			newX, newY = SavingClickCoords[2]+difX, SavingClickCoords[3]+difY
-			#print(newX, newY, difX, difY)
 
-			#print(newX, newY)
+			difX, difY = curX-SavingClickCoords[0], curY-SavingClickCoords[1]
+			newX, newY = SavingClickCoords[2]+difX, SavingClickCoords[3]+difY
 
 			if newX < w-sw: newX = w-sw
 			if newY < h-sh: newY = h-sh
@@ -150,15 +135,13 @@ def OnPaintMouseMove(evt):
 			if newX > 0: newX = 0
 			if newY > 0: newY = 0
 
-			#print(newX, newY, curX, curY, w, sw, h, sh)
-
 			DrawPanel.Move(Point(newX, newY))
 
 def OnPenPropertyBrushSize(evt):
 	global ContLine, CurrentToolSize, DrawingToolsTable
 
-	#print(ContLine.GUI["BS"].GetValue())
 	CurrentToolSize = CurrentTool.GUI["BS"].GetValue()
+
 	for i in DrawingToolsTable:
 		i.GUI["BS"].SetValue(CurrentToolSize)
 
@@ -214,9 +197,42 @@ def ShowAbout(evt):
 	info.SetDescription(Description)
 	info.SetCopyright("(C) 2016.11 Arios Jentu")
 	info.SetWebSite("https://github.com/AriosJentu")
-	info.AddDeveloper("Максимов Павел Александрович\n(AriosJentu) [Б8103-а]")
+	info.AddDeveloper("Максимов Павел Александрович\n(AriosJentu)\n[Б8103-а]")
 
 	AboutBox(info)
+
+def OnSelectPenStyle(evt):
+
+	global PenStyles, CurrentPenStyle, DrawingToolsTable
+
+	string = evt.GetString()
+	string = string.encode("utf-8")
+
+	for i in PenStyles:
+		if i[0] == string:
+			CurrentPenStyle = i[1]
+			break
+
+
+	for i in DrawingToolsTable:
+		i.GUI["SP"].SetValue(string)
+
+def OnSelectBrushStyle(evt):
+
+	global BrushStyles, CurrentBrushStyle, DrawingToolsTable, ContLine, Line
+
+	string = evt.GetString()
+	string = string.encode("utf-8")
+
+	for i in BrushStyles:
+		if i[0] == string:
+			CurrentBrushStyle = i[1]
+
+	for i in DrawingToolsTable:
+		if i != ContLine and i != Line:
+			i.GUI["SB"].SetValue(string)
+
+
 
 PaintFrame.Bind(EVT_SIZE, OnFrameResize)
 PaintFrame.Bind(EVT_CLOSE, OnQuit)
@@ -235,9 +251,13 @@ DrawPanel.Bind(EVT_MOTION, OnPaintMouseMove)
 
 for i in DrawingToolsTable:
 	i.GUI["BS"].Bind(EVT_SPINCTRL, OnPenPropertyBrushSize)
+	i.GUI["SP"].Bind(EVT_COMBOBOX, OnSelectPenStyle)
+	if i != ContLine and i != Line:
+		i.GUI["SB"].Bind(EVT_COMBOBOX, OnSelectBrushStyle)
 
 Polygon.GUI["AN"].Bind(EVT_SPINCTRL, ChangePolygons)
 Move.GUI["ST"].Bind(EVT_LEFT_DOWN, AtStart)
+
 
 def onDown(evt):
 	print("DOWN")

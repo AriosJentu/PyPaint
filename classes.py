@@ -5,6 +5,25 @@ Figures = []
 Tools = []
 Paint = None
 
+PenStyles = [
+	["Стандартный", SOLID, "sLine"],
+	["Точечный", DOT, "sPPoint"],
+	["Длинный Пунктир", LONG_DASH, "sLDash"],
+	["Короткий Пунктир", SHORT_DASH, "sSDash"],
+	["Пунктир-Точка", DOT_DASH, "sPDash"],
+	["Без Границ", TRANSPARENT, "none"]
+]
+BrushStyles = [
+	["Без Заливки", TRANSPARENT, "bTrans"],
+	["Заливка", SOLID, "bSolid"],
+	["Прямая Диагональ", FDIAGONAL_HATCH, "bFDiag"],
+	["Обратная Диагональ", BDIAGONAL_HATCH, "bBDiag"],
+	["Крестовое Пересечение", CROSSDIAG_HATCH, "bCross"],
+	["Клетки", CROSS_HATCH, "bQuad"],
+	["Вертикаль", VERTICAL_HATCH, "bVert"],
+	["Горизонталь", HORIZONTAL_HATCH, "bHorz"]
+]
+
 CurrentTool = None
 CurrentFigure = None
 
@@ -16,7 +35,6 @@ class PaintZone(PaintDC):
 		self.Name = "Pen"
 		self.Parent = parent
 		self.MinW, self.MinH = parent.GetSize()
-		#print("INDA BEGINNING", self.MinW, self.MinH)
 
 		self.DefFuncs = {
 			"Pen":self.DrawLine,
@@ -27,8 +45,8 @@ class PaintZone(PaintDC):
 		}
 
 	def DrawFigure(self, figure):
-		self.SetBrush(Brush(figure.BrushColor, 1))
-		self.SetPen(Pen(figure.PenColor, figure.BrushSize, 0))
+		self.SetBrush(Brush(figure.BrushColor, figure.BrushStyle))
+		self.SetPen(Pen(figure.PenColor, figure.BrushSize, figure.PenStyle))
 		self.SetTool(figure.Tool.Name)
 
 		if figure.Tool.Continious == True:
@@ -81,7 +99,7 @@ class PaintZone(PaintDC):
 		angle = 2*math.pi/numOfAngles
 		x, y = x+radiusW, y+radiusH
 		
-		for i in range(0, numOfAngles):
+		for i in xrange(numOfAngles):
 			fx = radiusW*math.cos(angle*i)
 			fy = radiusH*math.sin(angle*i)
 			
@@ -111,12 +129,17 @@ class PaintZone(PaintDC):
 
 		for i in Figures:
 			for j in i.Points:
-				MinCoordX, MinCoordY = min(MinCoordX, j[0]-i.BrushSize), min(MinCoordY, j[1]-i.BrushSize)
+				MinCoordX, MinCoordY = min(MinCoordX, j[0]-int(i.BrushSize/2)), min(MinCoordY, j[1]-int(i.BrushSize/2))
 
 		if MinCoordX >= 0:
 			MinCoordX = 0
+		else:
+			MinCoordX -= 8
+
 		if MinCoordY >= 0:
 			MinCoordY = 0
+		else:
+			MinCoordY -= 8
 
 		for i in Figures:
 			for j in i.Points:
@@ -125,8 +148,7 @@ class PaintZone(PaintDC):
 
 		for i in Figures:
 			for j in i.Points:
-				#print(i.Points)
-				MaxCoordX, MaxCoordY = max(MaxCoordX, j[0]+i.BrushSize), max(MaxCoordY, j[1]+i.BrushSize)
+				MaxCoordX, MaxCoordY = max(MaxCoordX, j[0]+int(i.BrushSize/2)), max(MaxCoordY, j[1]+int(i.BrushSize/2))
 
 		if MaxCoordX < wa+MinCoordX:
 			MaxCoordX = wa+MinCoordX
@@ -134,18 +156,40 @@ class PaintZone(PaintDC):
 			MaxCoordY = ha+MinCoordY
 
 		self.MinW, self.MinH = MaxCoordX+8, MaxCoordY+8
-		#print(MaxCoordX, MaxCoordY, self.MinW, self.MinH)
 
 		if self.MinW < wa:
 			self.MinW = wa
 		if self.MinH < ha:
 			self.MinH = ha
-		#print(self.MinW, self.MinH)
 
 		self.Parent.Move(Point(x+MinCoordX, y+MinCoordY))
 		self.Parent.SetSize(Size(self.MinW, self.MinH))
 
 
+SavingColours = [
+	"#FF0000", "#00FF00", "#0000FF", "#4444FF", 
+	"#6600FF", "#143F72", "#FF9900", "#18C018", 
+	"#C01818", "#1818C0", "#D73030", "#30D730", 
+	"#FFFFFF", "#000000", "#333333", "#444444"
+]
+
+class ColorBox(ColourDialog):
+
+	def __init__(self, parent, colourD):
+		global SavingColours 
+
+		data = ColourData()
+		data.SetColour(colourD)
+
+		for i in xrange(16):
+			data.SetCustomColour(i, SavingColours[i])
+
+
+		ColourDialog.__init__(self, parent, data)
+
+	def GetColor(self):
+		r, g, b = self.GetColourData().GetColour()
+		return "#"+ToHEX(r, g, b)
 
 class Figure:
 
@@ -157,6 +201,8 @@ class Figure:
 		self.BrushColor = None
 		self.BrushSize = None
 		self.Polygons = 3
+		self.PenStyle = SOLID
+		self.BrushStyle = TRANSPARENT
 
 		Figures.append(self)
 
@@ -173,8 +219,8 @@ class Tool:
 
 		Tools.append({"name":name, "tool":self})
 
-	def AddProperty(self, name, rus, tableOfVariaties):
-		self.Properties[name] = [tableOfVariaties, rus]
+	def AddProperty(self, name, rus, tableOfVariaties, tableOfImages = []):
+		self.Properties[name] = [tableOfVariaties, rus, tableOfImages]
 
 
 ContLine 				= Tool("Pen", "Кисть")
@@ -209,8 +255,13 @@ DrawingToolsTable = [ContLine, Line, Rectangle, Ellipse, Polygon]
 #Line.AddProperty("Scales", "Nothionk")				#For BUTTON
 #Line.AddProperty("Scaled", ["12", "123", "1234"]) 	#For COMBOBOX
 #Line.AddProperty("Scalen", [1, 2, 3, 4, 5])	 	#For SPINBOX
+
 for i in DrawingToolsTable:
 	i.AddProperty("BS", "Размер Кисти", [1, 60])
+	i.AddProperty("SP", "Стиль Кисти", [j[0] for j in PenStyles], [j[2] for j in PenStyles])
+	if i != ContLine and i != Line:
+		i.AddProperty("SB", "Стиль Фигуры", [j[0] for j in BrushStyles], [j[2] for j in BrushStyles])
+	
 
 Polygon.AddProperty("AN", "Многоугольник", [3, 12])
 Move.AddProperty("ST", "Перемещение", "В начало")

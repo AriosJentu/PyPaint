@@ -85,16 +85,16 @@ DividerPanel.SetSize(Size(114, 1))
 DividerPanel.Move(Point(0, 0))
 DividerPanel.SetBackgroundColour("#333333")
 
-ColorBar = {}
-ColorBar["First"] = Button(PaintSidePanel, ID_ANY)
-ColorBar["First"].SetSize(Size(50, 30))
-ColorBar["First"].Move(Point(5, (n-1)*55+5))
-ColorBar["First"].SetBackgroundColour(Colour(0, 0, 0))
+ColorBar = []
+ColorBar.append(Button(PaintSidePanel, ID_ANY) )
+ColorBar[0].SetSize(Size(50, 30))
+ColorBar[0].Move(Point(5, (n-1)*55+5))
+ColorBar[0].SetBackgroundColour(Colour(0, 0, 0))
 
-ColorBar["Second"] = Button(PaintSidePanel, ID_ANY)
-ColorBar["Second"].SetSize(Size(50, 30))
-ColorBar["Second"].Move(Point(60, (n-1)*55+5))
-ColorBar["Second"].SetBackgroundColour(Colour(255, 255, 255))
+ColorBar.append(Button(PaintSidePanel, ID_ANY) )
+ColorBar[1].SetSize(Size(50, 30))
+ColorBar[1].Move(Point(60, (n-1)*55+5))
+ColorBar[1].SetBackgroundColour(Colour(255, 255, 255))
 
 pane = Panel(PaintSidePanel, ID_ANY)
 pane.SetSize(Size(105, 22))
@@ -115,6 +115,35 @@ pane.Centre()
 pane.Move(Point(pane.GetPosition().x, (n-1)*55+40))
 
 PaintFrame.SetMinSize(Size(640, (n+5)*55))
+
+def OnColorClick(evt):
+	global SavingColours
+	source = evt.GetEventObject()
+
+	idd = 0
+	if source == ColorBar[1]:
+		idd = 1
+
+	colBar = ColorBox(PaintFrame, source.GetBackgroundColour())
+
+	if colBar.ShowModal() == ID_OK:
+	
+		data = colBar.GetColourData()
+		r, g, b = data.GetColour()
+		col = "#"+ToHEX(r, g, b)
+	
+		source.SetBackgroundColour(col)
+		CurrentColour[idd] = col
+
+		for i in xrange(16):
+			r, g, b = data.GetCustomColour(i)
+			SavingColours[i] = "#"+ToHEX(r, g, b)
+
+		colBar.Destroy()
+
+for i in ColorBar:
+	i.Bind(EVT_LEFT_DOWN, OnColorClick)
+
 
 class PaintButton:
 

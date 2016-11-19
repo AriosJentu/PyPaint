@@ -1,5 +1,8 @@
 # -*- encoding: utf-8 -*-
 #Конверторы:
+
+from wx.combo import BitmapComboBox
+
 def ToRGB(c):
 	if len(c) == 8:
 		return int(c[6:8], 16), int(c[0:2], 16), int(c[2:4], 16), int(c[4:6], 16)
@@ -66,10 +69,26 @@ class ObjectProperties:
 				self.Property[key].SetBackgroundColour(color)
 			
 			else:
-				self.Property[key] = ComboBox(self.Panel, ID_ANY, style=CB_READONLY, choices=val[0], size=(100,30))
-				self.Property[key].SetValue(str(val[0]))
-				self.Property[key].SetBackgroundColour(color)
-				self.Property[key].SetForegroundColour(Colour(255, 255, 255))
+				self.Property[key] = BitmapComboBox(self.Panel, ID_ANY, style=CB_READONLY, size=(100,30))
+				
+				tab = []
+				for i in val[0]:
+					tab.append([i])
+
+				for i, v in enumerate(tab):
+					try:
+						if val[2][i]:
+							v.append(val[2][i])
+					except:
+						v.append("none")
+
+				for i in tab:
+					self.Property[key].Append(i[0], Bitmap(APPDIR+"styles/"+i[1]+".png"))
+
+
+				self.Property[key].SetValue(str(tab[0][0]))
+				#self.Property[key].SetBackgroundColour(color)
+				#self.Property[key].SetForegroundColour(Colour(255, 255, 255))
 
 			Slide.Add(self.Labels[key])
 			Slide.Add(self.Property[key])
