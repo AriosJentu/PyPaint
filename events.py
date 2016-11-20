@@ -164,8 +164,8 @@ def ChangePolygons(evt):
 	CurrentPolygon = int(Polygon.GUI["AN"].GetValue())
 
 def AtStart(evt):
-	global DrawPanel
-	DrawPanel.Move(Point(0, 0))
+	global DrawScroller
+	DrawScroller.Scroll(0, 0)
 
 def OnQuit(evt):
 
