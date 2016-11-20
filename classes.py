@@ -35,6 +35,7 @@ class PaintZone(PaintDC):
 		self.Name = "Pen"
 		self.Parent = parent
 		self.MinW, self.MinH = parent.GetSize()
+		self.SavedOld = [0, 0]
 
 		self.DefFuncs = {
 			"Pen":self.DrawLine,
@@ -120,7 +121,6 @@ class PaintZone(PaintDC):
 
 	def CalcSizes(self):
 
-		x, y = self.Parent.GetPosition()
 		w, h = self.Parent.GetSize()
 		wa, ha = self.Parent.GetParent().GetSize()
 
@@ -162,9 +162,14 @@ class PaintZone(PaintDC):
 		if self.MinH < ha:
 			self.MinH = ha
 
-		self.Parent.Move(Point(x+MinCoordX, y+MinCoordY))
-		self.Parent.SetSize(Size(self.MinW, self.MinH))
+		self.Parent.Move(Point(0, 0))
+		x, y = self.Parent.GetParent().GetViewStart()
 
+		self.Parent.SetSize(Size(self.MinW, self.MinH))
+		self.Parent.GetParent().SetScrollbars(1, 1, self.MinW, self.MinH)
+		self.Parent.GetParent().Scroll(x+abs(MinCoordX)+self.SavedOld[0], y+abs(MinCoordY)+self.SavedOld[1])
+
+		self.SavedOld = [abs(MinCoordX), abs(MinCoordY)]
 
 SavingColours = [
 	"#FF0000", "#00FF00", "#0000FF", "#4444FF", 

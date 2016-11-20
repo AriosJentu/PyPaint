@@ -12,29 +12,24 @@ def OnFrameResize(evt):
 	w, h = PaintFrame.GetSize()
 	PaintSidePanel.SetSize(Size(115, h-51))
 
-	w, h = w-114, h-51
+	w, h = w-114-3, h-51
 	DrawScroller.SetSize(Size(w, h))
 
 	x, y = DrawPanel.GetPosition()
-	sw, sh = DrawPanel.GetSize()
+	sw, sh = Paint.MinW, Paint.MinH #DrawPanel.GetSize()
 
-	if x < w-sw:
-		x = w-sw
-	if y < h-sh:
-		y = h-sh
+	if x < w-sw: x = w-sw
+	if y < h-sh: y = h-sh
 
-	if x > 0:
-		x = 0
-	if y > 0:
-		y = 0
+	if x > 0: x = 0
+	if y > 0: y = 0
 
-	if w > sw:
-		sw = w
-	if h > sh:
-		sh = h
+	if w > sw: sw = w
+	if h > sh: sh = h
 
 	DrawPanel.Move(Point(x, y))
-	
+	Redraw(True)
+
 	x, y = PaintParameters.GetPosition()
 	PaintParameters.SetSize(Size(114, h-y))
 	for but in PaintButtons:
@@ -74,7 +69,7 @@ def OnPaintMouseDown(evt):
 	elif CurrentTool.Name == "Move":
 
 		IsPanelMoving = True
-		SavingClickCoords = [GetMousePosition().x, GetMousePosition().y, DrawPanel.GetPosition().x, DrawPanel.GetPosition().y]
+		SavingClickCoords = [GetMousePosition().x, GetMousePosition().y, DrawScroller.GetViewStart().x, DrawScroller.GetViewStart().y]
 
 
 def OnPaintMouseUp(evt):
@@ -94,7 +89,7 @@ def OnPaintMouseUp(evt):
 
 def OnPaintMouseMove(evt):
 
-	global IsDrawing, IsPanelMoving
+	global IsDrawing, IsPanelMoving, DrawScroller
 
 	if IsDrawing == True:
 
@@ -124,7 +119,7 @@ def OnPaintMouseMove(evt):
 
 		if w < sw or h < sh or SavingClickCoords[2] < 0 or SavingClickCoords[3] < 0 :
 
-			curX, curY = GetMousePosition()
+			"""curX, curY = GetMousePosition()
 
 			difX, difY = curX-SavingClickCoords[0], curY-SavingClickCoords[1]
 			newX, newY = SavingClickCoords[2]+difX, SavingClickCoords[3]+difY
@@ -135,7 +130,13 @@ def OnPaintMouseMove(evt):
 			if newX > 0: newX = 0
 			if newY > 0: newY = 0
 
-			DrawPanel.Move(Point(newX, newY))
+			DrawPanel.Move(Point(newX, newY))"""
+
+			curX, curY = GetMousePosition()
+			difX, difY = curX-SavingClickCoords[0], curY-SavingClickCoords[1]
+			newX, newY = SavingClickCoords[2]-difX, SavingClickCoords[3]-difY
+
+			DrawScroller.Scroll(newX, newY)
 
 def OnPenPropertyBrushSize(evt):
 	global ContLine, CurrentToolSize, DrawingToolsTable
