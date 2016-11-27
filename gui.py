@@ -2,9 +2,6 @@
 from wx.combo import BitmapComboBox
 
 iconDir = APPDIR+"icons/logo.png"
-CurrentColour = ["#000000", "#FFFFFF"]
-CurrentToolSize = 1
-CurrentZoom = 100
 
 #Окно
 PaintFrame = Frame(None, ID_ANY, "Графический редактор")
@@ -43,8 +40,6 @@ PaintSidePanel.SetBackgroundColour(Colors["Default"])
 
 #Панель рисования
 DrawScroller = ScrolledWindow(PaintFrame, ID_ANY)
-#DrawScroller.SetScrollRate(5, 5)
-#DrawScroller.EnableScrolling(True, True)
 DrawScroller.SetScrollbars(1, 1, 800-115, 600-51)
 
 DrawScroller.SetSize(Size(685, 600-51))
@@ -58,20 +53,6 @@ DrawPanel.SetBackgroundColour(Colour(255, 255, 255))
 
 Paint = PaintZone(DrawPanel)
 Paint.Clear()
-
-"""
-ScrollBarV = BoxSizer(VERTICAL)
-ScrollBarH = BoxSizer(HORIZONTAL)
-ScrollBarV.Add(ScrollBarH)
-
-ScrollBarH.Add(DrawPanel)
-
-DrawScroller.SetSizer(ScrollBarV)
-DrawScroller.FitInside()
-"""
-#print(DrawPanel.GetSize())
-
-#Конец
 
 PaintButtons = []
 CurrentProperty = None

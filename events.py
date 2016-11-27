@@ -2,10 +2,6 @@
 IsDrawing = False
 IsPanelMoving = False
 
-CurrentPolygon = 3
-CurrentBrushStyle = TRANSPARENT
-CurrentPenStyle = SOLID
-
 Description = "Векторный графический редактор"
 
 def OnFrameResize(evt):
@@ -41,11 +37,16 @@ def OnPaint(evt):
 	Redraw()
 
 SavingClickCoords = []
-def OnPaintMouseDown(evt):
+def OnPaintMouseDown(evt, typeBut):
 
 	global CurrentFigure, CurrentTool, IsDrawing, SavingClickCoords, IsPanelMoving, CurrentPolygon
 
-	if CurrentTool.IsDrawTool != False:
+	if CurrentTool.Name == "Move" or typeBut == "middle":
+
+		IsPanelMoving = True
+		SavingClickCoords = [GetMousePosition().x, GetMousePosition().y, DrawScroller.GetViewStart().x, DrawScroller.GetViewStart().y]
+
+	elif CurrentTool.IsDrawTool != False:
 
 		IsDrawing = True
 
@@ -57,19 +58,15 @@ def OnPaintMouseDown(evt):
 			CurrentFigure.Points.append([evt.GetPosition().x, evt.GetPosition().y])
 
 		CurrentFigure.Tool = CurrentTool
-		CurrentFigure.PenColor = CurrentColour[0]
-		CurrentFigure.BrushColor = CurrentColour[1]
-		CurrentFigure.BrushSize = CurrentToolSize*(CurrentZoom/100)
+		CurrentFigure.PenColor = CurrentColour[0] if typeBut else CurrentColour[1]
+		CurrentFigure.BrushColor = CurrentColour[1] if typeBut else CurrentColour[0]
+		CurrentFigure.BrushSize = CurrentToolSize
 		CurrentFigure.Polygons = CurrentPolygon
 		CurrentFigure.PenStyle = CurrentPenStyle
 		CurrentFigure.BrushStyle = CurrentBrushStyle
+		CurrentFigure.Radius = CurrentRadius
 
 		OnPaintMouseMove(evt)
-
-	elif CurrentTool.Name == "Move":
-
-		IsPanelMoving = True
-		SavingClickCoords = [GetMousePosition().x, GetMousePosition().y, DrawScroller.GetViewStart().x, DrawScroller.GetViewStart().y]
 
 
 def OnPaintMouseUp(evt):
@@ -119,19 +116,6 @@ def OnPaintMouseMove(evt):
 
 		if w < sw or h < sh or SavingClickCoords[2] < 0 or SavingClickCoords[3] < 0 :
 
-			"""curX, curY = GetMousePosition()
-
-			difX, difY = curX-SavingClickCoords[0], curY-SavingClickCoords[1]
-			newX, newY = SavingClickCoords[2]+difX, SavingClickCoords[3]+difY
-
-			if newX < w-sw: newX = w-sw
-			if newY < h-sh: newY = h-sh
-
-			if newX > 0: newX = 0
-			if newY > 0: newY = 0
-
-			DrawPanel.Move(Point(newX, newY))"""
-
 			curX, curY = GetMousePosition()
 			difX, difY = curX-SavingClickCoords[0], curY-SavingClickCoords[1]
 			newX, newY = SavingClickCoords[2]-difX, SavingClickCoords[3]-difY
@@ -162,6 +146,10 @@ def Redraw(isCalcSizes = False):
 def ChangePolygons(evt):
 	global CurrentPolygon
 	CurrentPolygon = int(Polygon.GUI["AN"].GetValue())
+
+def ChangeRadius(evt):
+	global CurrentRadius
+	CurrentRadius = int(RoundRect.GUI["AN"].GetValue())
 
 def AtStart(evt):
 	global DrawScroller
@@ -233,6 +221,57 @@ def OnSelectBrushStyle(evt):
 		if i != ContLine and i != Line:
 			i.GUI["SB"].SetValue(string)
 
+def OnPaintChangeScale(evt, source):
+
+	global CurrentToolSize, CurrentZoom, Figures
+
+	newScale = source.GetValue()
+
+	divParam = float(newScale)/float(CurrentZoom)
+
+	CurrentToolSize = CurrentToolSize*divParam
+
+	for i in Figures:
+		
+		i.BrushSize = i.BrushSize*divParam
+
+		for j, k in enumerate(i.Points):
+			k[0] = k[0]*divParam
+			k[1] = k[1]*divParam
+
+	Redraw(True)
+
+	CurrentZoom = newScale
+
+def OnClickScale(evt, but):
+
+	global DrawScroller, CurrentZoom
+
+	x, y = DrawScroller.GetViewStart()
+	a, b = evt.GetPosition()
+
+	dif = 10
+	PrevZoom = CurrentZoom
+
+	if but == "out":
+		dif = -10
+
+
+	Loop.GUI["LP"].SetValue( Loop.GUI["LP"].GetValue() + dif )
+	OnPaintChangeScale(evt, Loop.GUI["LP"])
+
+	#scaler = PrevZoom/CurrentZoom if dif > 0 else CurrentZoom/PrevZoom
+
+	DrawScroller.Scroll(a-x, b-y)
+
+def OnPaintDef(evt, tst):
+	global CurrentTool, Loop
+
+	if CurrentTool == Loop:
+		OnClickScale(evt, tst)
+	else:
+		OnPaintMouseUp(evt)
+
 
 
 PaintFrame.Bind(EVT_SIZE, OnFrameResize)
@@ -246,8 +285,12 @@ FileMenu.Bind(EVT_MENU, ClearPaint, id=ID_CLEAR)
 HelpMenu.Bind(EVT_MENU, ShowAbout, id=ID_ABOUT)
 
 DrawPanel.Bind(EVT_PAINT, OnPaint)
-DrawPanel.Bind(EVT_LEFT_DOWN, OnPaintMouseDown)
-DrawPanel.Bind(EVT_LEFT_UP, OnPaintMouseUp)
+DrawPanel.Bind(EVT_LEFT_DOWN, lambda evt: OnPaintMouseDown(evt, True) )
+DrawPanel.Bind(EVT_RIGHT_DOWN, lambda evt: OnPaintMouseDown(evt, False) )
+DrawPanel.Bind(EVT_MIDDLE_DOWN, lambda evt: OnPaintMouseDown(evt, "middle") )
+DrawPanel.Bind(EVT_LEFT_UP, lambda evt: OnPaintDef(evt, "in") )
+DrawPanel.Bind(EVT_RIGHT_UP, lambda evt: OnPaintDef(evt, "out") )
+DrawPanel.Bind(EVT_MIDDLE_UP, OnPaintMouseUp)
 DrawPanel.Bind(EVT_MOTION, OnPaintMouseMove)
 
 for i in DrawingToolsTable:
@@ -257,11 +300,10 @@ for i in DrawingToolsTable:
 		i.GUI["SB"].Bind(EVT_COMBOBOX, OnSelectBrushStyle)
 
 Polygon.GUI["AN"].Bind(EVT_SPINCTRL, ChangePolygons)
+RoundRect.GUI["AN"].Bind(EVT_SPINCTRL, ChangeRadius)
+
 Move.GUI["ST"].Bind(EVT_LEFT_DOWN, AtStart)
+Loop.GUI["LP"].Bind(EVT_SPINCTRL, lambda evt: OnPaintChangeScale(evt, evt.GetEventObject()) )
 
-
-def onDown(evt):
-	print("DOWN")
-
-def onUp(evt):
-	print("UP")
+Loop.GUI["LP"].SetValue(100)
+RoundRect.GUI["AN"].SetValue(5)

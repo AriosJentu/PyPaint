@@ -11,6 +11,16 @@ Colors = {
 	"Panel"		:"#555555"
 	}
 
+CurrentTool = None
+CurrentFigure = None
+CurrentColour = ["#000000", "#FFFFFF"]
+CurrentToolSize = 1
+CurrentZoom = 100
+CurrentPolygon = 3
+CurrentRadius = 5
+CurrentBrushStyle = TRANSPARENT
+CurrentPenStyle = SOLID
+
 APPDIR = os.path.dirname(os.path.abspath(__file__))+"/"
 
 execfile(APPDIR+"funcs.py")

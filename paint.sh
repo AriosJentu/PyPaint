@@ -1,1 +1,1 @@
-python2 main.py
+python2 $HOME/Python/PyPaint/main.py

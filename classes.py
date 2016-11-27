@@ -24,9 +24,6 @@ BrushStyles = [
 	["Горизонталь", HORIZONTAL_HATCH, "bHorz"]
 ]
 
-CurrentTool = None
-CurrentFigure = None
-
 class PaintZone(PaintDC):
 
 	def __init__(self, parent, *args, **kwar):
@@ -42,12 +39,13 @@ class PaintZone(PaintDC):
 			"Line":self.DrawLine,
 			"Rectangle":self.DrawRect,
 			"Ellipse":self.DrawEll,
-			"Polygon":self.DrawPolygon
+			"Polygon":self.DrawPoly,
+			"RoundRect":self.DrawRoundRect
 		}
 
 	def DrawFigure(self, figure):
 		self.SetBrush(Brush(figure.BrushColor, figure.BrushStyle))
-		self.SetPen(Pen(figure.PenColor, figure.BrushSize, figure.PenStyle))
+		self.SetPen(Pen(figure.PenColor, int(figure.BrushSize), figure.PenStyle))
 		self.SetTool(figure.Tool.Name)
 
 		if figure.Tool.Continious == True:
@@ -59,6 +57,8 @@ class PaintZone(PaintDC):
 					if self.Name in self.DefFuncs:
 						if self.Name == "Polygon":
 							self.Func(v[0], v[1], figure.Points[i+1][0], figure.Points[i+1][1], figure.Polygons)
+						elif self.Name == "RoundRect":
+							self.Func(v[0], v[1], figure.Points[i+1][0], figure.Points[i+1][1], figure.Radius)
 						else:
 							self.Func(v[0], v[1], figure.Points[i+1][0], figure.Points[i+1][1])
 		else:
@@ -69,6 +69,9 @@ class PaintZone(PaintDC):
 				
 				if self.Name == "Polygon":
 					self.Func(mOld[0], mOld[1], mNew[0], mNew[1], figure.Polygons)
+
+				elif self.Name == "RoundRect":
+					self.Func(mOld[0], mOld[1], mNew[0], mNew[1], figure.Radius)
 
 				else:
 					self.Func(mOld[0], mOld[1], mNew[0], mNew[1])
@@ -87,27 +90,42 @@ class PaintZone(PaintDC):
 
 		self.DrawEllipse(x, y, w, h)
 
-	def DrawPolygon(self, ax, ay, bx, by, numOfAngles = 4):
+	def DrawRoundRect(self, ax, ay, bx, by, rad=20):
 
 		x, y = min(ax, bx), min(ay, by)
 		w, h = abs(ax-bx), abs(ay-by)
+
+		self.DrawRoundedRectangle(x, y, w, h, rad)
+
+	def DrawPoly(self, ax, ay, bx, by, numOfAngles = 4):
+
+		x, y = min(ax, bx), min(ay, by)
+		w, h = abs(ax-bx), abs(ay-by)
+		minR = max(w, h)
 
 		if numOfAngles < 3:
 			numOfAngles = 3
 
 		radiusW = w/2
 		radiusH = h/2
+		#radius = minR/2
 		angle = 2*math.pi/numOfAngles
 		x, y = x+radiusW, y+radiusH
+		#x, y = x+radius, y+radius
 		
+
+		points = []
 		for i in xrange(numOfAngles):
 			fx = radiusW*math.cos(angle*i)
 			fy = radiusH*math.sin(angle*i)
 			
-			gx = radiusW*math.cos(angle*(i+1))
-			gy = radiusH*math.sin(angle*(i+1))
+			#gx = radius*math.cos(angle*(i+1))
+			#gy = radius*math.sin(angle*(i+1))
 
-			self.DrawLine(x+fx, y+fy, x+gx, y+gy)
+			#self.DrawLine(x+fx, y+fy, x+gx, y+gy)
+			points.append([x+fx, y+fy])
+
+		self.DrawPolygon(list(points))
 		
 
 	def SetTool(self, name):
@@ -167,6 +185,7 @@ class PaintZone(PaintDC):
 
 		self.Parent.SetSize(Size(self.MinW, self.MinH))
 		self.Parent.GetParent().SetScrollbars(1, 1, self.MinW, self.MinH)
+		#self.Parent.GetParent().SetScrollRate(25, 25)
 		self.Parent.GetParent().Scroll(x+abs(MinCoordX)+self.SavedOld[0], y+abs(MinCoordY)+self.SavedOld[1])
 
 		self.SavedOld = [abs(MinCoordX), abs(MinCoordY)]
@@ -206,6 +225,7 @@ class Figure:
 		self.BrushColor = None
 		self.BrushSize = None
 		self.Polygons = 3
+		self.Radius = 5
 		self.PenStyle = SOLID
 		self.BrushStyle = TRANSPARENT
 
@@ -232,15 +252,14 @@ ContLine 				= Tool("Pen", "Кисть")
 ContLine.Continious 	= True
 ContLine.Icon 			= APPDIR+"icons/brush.png"
 
-Move 					= Tool("Move", "Перемещение")
-Move.Icon 				= APPDIR+"icons/move.png"
-Move.IsDrawTool 		= False
-
 Line 					= Tool("Line", "Линия")
 Line.Icon 				= APPDIR+"icons/line.png"
 
 Rectangle				= Tool("Rectangle", "Прямоугольник")
 Rectangle.Icon			= APPDIR+"icons/rectangle.png"
+
+RoundRect 				= Tool("RoundRect", "Закруглённый прямоугольник")
+RoundRect.Icon 			= APPDIR+"icons/rround.png"
 
 Ellipse					= Tool("Ellipse", "Эллипс")
 Ellipse.Icon			= APPDIR+"icons/ellipse.png"
@@ -248,18 +267,22 @@ Ellipse.Icon			= APPDIR+"icons/ellipse.png"
 Polygon					= Tool("Polygon", "Многоугольник")
 Polygon.Icon 			= APPDIR+"icons/polygon.png"
 
+Move 					= Tool("Move", "Перемещение")
+Move.Icon 				= APPDIR+"icons/move.png"
+Move.IsDrawTool 		= False
+
 Loop					= Tool("Scale", "Лупа")
 Loop.Icon 				= APPDIR+"icons/zoom.png"
 Loop.IsDrawTool 		= False
 
 CurrentTool = ContLine
 
-DrawingToolsTable = [ContLine, Line, Rectangle, Ellipse, Polygon]
+DrawingToolsTable = [ContLine, Line, Rectangle, Ellipse, Polygon, RoundRect]
 
 #Example:
-#Line.AddProperty("Scales", "Nothionk")				#For BUTTON
+#Line.AddProperty("Scales", "Nothink")				#For BUTTON
 #Line.AddProperty("Scaled", ["12", "123", "1234"]) 	#For COMBOBOX
-#Line.AddProperty("Scalen", [1, 2, 3, 4, 5])	 	#For SPINBOX
+#Line.AddProperty("Scalen", [1, 5])	 				#For SPINBOX
 
 for i in DrawingToolsTable:
 	i.AddProperty("BS", "Размер Кисти", [1, 60])
@@ -269,11 +292,9 @@ for i in DrawingToolsTable:
 	
 
 Polygon.AddProperty("AN", "Многоугольник", [3, 12])
+RoundRect.AddProperty("AN", "Радиус", [0, 128])
+
 Move.AddProperty("ST", "Перемещение", "В начало")
 
-def onMoveClick():
-	return False
-
-def onLoopClick():
-	return False
+Loop.AddProperty("LP", "Масштаб", [20, 500])
 
