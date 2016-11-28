@@ -18,6 +18,7 @@ CurrentToolSize = 1
 CurrentZoom = 100
 CurrentPolygon = 3
 CurrentRadius = 5
+CurrentAngle = 0
 CurrentBrushStyle = TRANSPARENT
 CurrentPenStyle = SOLID
 

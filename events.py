@@ -65,6 +65,7 @@ def OnPaintMouseDown(evt, typeBut):
 		CurrentFigure.PenStyle = CurrentPenStyle
 		CurrentFigure.BrushStyle = CurrentBrushStyle
 		CurrentFigure.Radius = CurrentRadius
+		CurrentFigure.Angle = CurrentAngle
 
 		OnPaintMouseMove(evt)
 
@@ -146,6 +147,10 @@ def Redraw(isCalcSizes = False):
 def ChangePolygons(evt):
 	global CurrentPolygon
 	CurrentPolygon = int(Polygon.GUI["AN"].GetValue())
+
+def ChangeAngle(evt):
+	global CurrentAngle
+	CurrentAngle = int(Polygon.GUI["UG"].GetValue())
 
 def ChangeRadius(evt):
 	global CurrentRadius
@@ -300,6 +305,8 @@ for i in DrawingToolsTable:
 		i.GUI["SB"].Bind(EVT_COMBOBOX, OnSelectBrushStyle)
 
 Polygon.GUI["AN"].Bind(EVT_SPINCTRL, ChangePolygons)
+Polygon.GUI["UG"].Bind(EVT_SPINCTRL, ChangeAngle)
+
 RoundRect.GUI["AN"].Bind(EVT_SPINCTRL, ChangeRadius)
 
 Move.GUI["ST"].Bind(EVT_LEFT_DOWN, AtStart)

@@ -56,7 +56,7 @@ class PaintZone(PaintDC):
 
 					if self.Name in self.DefFuncs:
 						if self.Name == "Polygon":
-							self.Func(v[0], v[1], figure.Points[i+1][0], figure.Points[i+1][1], figure.Polygons)
+							self.Func(v[0], v[1], figure.Points[i+1][0], figure.Points[i+1][1], figure.Polygons, figure.Angle)
 						elif self.Name == "RoundRect":
 							self.Func(v[0], v[1], figure.Points[i+1][0], figure.Points[i+1][1], figure.Radius)
 						else:
@@ -68,7 +68,7 @@ class PaintZone(PaintDC):
 				mNew = figure.Points[1]
 				
 				if self.Name == "Polygon":
-					self.Func(mOld[0], mOld[1], mNew[0], mNew[1], figure.Polygons)
+					self.Func(mOld[0], mOld[1], mNew[0], mNew[1], figure.Polygons, figure.Angle)
 
 				elif self.Name == "RoundRect":
 					self.Func(mOld[0], mOld[1], mNew[0], mNew[1], figure.Radius)
@@ -97,7 +97,7 @@ class PaintZone(PaintDC):
 
 		self.DrawRoundedRectangle(x, y, w, h, rad)
 
-	def DrawPoly(self, ax, ay, bx, by, numOfAngles = 4):
+	def DrawPoly(self, ax, ay, bx, by, numOfAngles = 4, ang=0):
 
 		x, y = min(ax, bx), min(ay, by)
 		w, h = abs(ax-bx), abs(ay-by)
@@ -108,21 +108,16 @@ class PaintZone(PaintDC):
 
 		radiusW = w/2
 		radiusH = h/2
-		#radius = minR/2
-		angle = 2*math.pi/numOfAngles
-		x, y = x+radiusW, y+radiusH
-		#x, y = x+radius, y+radius
 		
+		angle = (2*math.pi/numOfAngles)
+		x, y = x+radiusW, y+radiusH
 
 		points = []
 		for i in xrange(numOfAngles):
-			fx = radiusW*math.cos(angle*i)
-			fy = radiusH*math.sin(angle*i)
 			
-			#gx = radius*math.cos(angle*(i+1))
-			#gy = radius*math.sin(angle*(i+1))
-
-			#self.DrawLine(x+fx, y+fy, x+gx, y+gy)
+			fx = radiusW*math.cos(angle*i+math.radians(ang))
+			fy = radiusH*math.sin(angle*i+math.radians(ang))
+			
 			points.append([x+fx, y+fy])
 
 		self.DrawPolygon(list(points))
@@ -185,7 +180,6 @@ class PaintZone(PaintDC):
 
 		self.Parent.SetSize(Size(self.MinW, self.MinH))
 		self.Parent.GetParent().SetScrollbars(1, 1, self.MinW, self.MinH)
-		#self.Parent.GetParent().SetScrollRate(25, 25)
 		self.Parent.GetParent().Scroll(x+abs(MinCoordX)+self.SavedOld[0], y+abs(MinCoordY)+self.SavedOld[1])
 
 		self.SavedOld = [abs(MinCoordX), abs(MinCoordY)]
@@ -226,6 +220,7 @@ class Figure:
 		self.BrushSize = None
 		self.Polygons = 3
 		self.Radius = 5
+		self.Angle = 0
 		self.PenStyle = SOLID
 		self.BrushStyle = TRANSPARENT
 
@@ -248,32 +243,32 @@ class Tool:
 		self.Properties[name] = [tableOfVariaties, rus, tableOfImages]
 
 
-ContLine 				= Tool("Pen", "Кисть")
-ContLine.Continious 	= True
-ContLine.Icon 			= APPDIR+"icons/brush.png"
+ContLine 			= Tool("Pen", "Кисть")
+ContLine.Continious = True
+ContLine.Icon 		= APPDIR+"icons/brush.png"
 
-Line 					= Tool("Line", "Линия")
-Line.Icon 				= APPDIR+"icons/line.png"
+Line 				= Tool("Line", "Линия")
+Line.Icon 			= APPDIR+"icons/line.png"
 
-Rectangle				= Tool("Rectangle", "Прямоугольник")
-Rectangle.Icon			= APPDIR+"icons/rectangle.png"
+Rectangle			= Tool("Rectangle", "Прямоугольник")
+Rectangle.Icon		= APPDIR+"icons/rectangle.png"
 
-RoundRect 				= Tool("RoundRect", "Закруглённый прямоугольник")
-RoundRect.Icon 			= APPDIR+"icons/rround.png"
+RoundRect 			= Tool("RoundRect", "Закруглённый прямоугольник")
+RoundRect.Icon 		= APPDIR+"icons/rround.png"
 
-Ellipse					= Tool("Ellipse", "Эллипс")
-Ellipse.Icon			= APPDIR+"icons/ellipse.png"
+Ellipse				= Tool("Ellipse", "Эллипс")
+Ellipse.Icon		= APPDIR+"icons/ellipse.png"
 
-Polygon					= Tool("Polygon", "Многоугольник")
-Polygon.Icon 			= APPDIR+"icons/polygon.png"
+Polygon				= Tool("Polygon", "Многоугольник")
+Polygon.Icon 		= APPDIR+"icons/polygon.png"
 
-Move 					= Tool("Move", "Перемещение")
-Move.Icon 				= APPDIR+"icons/move.png"
-Move.IsDrawTool 		= False
+Move 				= Tool("Move", "Перемещение")
+Move.Icon 			= APPDIR+"icons/move.png"
+Move.IsDrawTool 	= False
 
-Loop					= Tool("Scale", "Лупа")
-Loop.Icon 				= APPDIR+"icons/zoom.png"
-Loop.IsDrawTool 		= False
+Loop				= Tool("Scale", "Лупа")
+Loop.Icon 			= APPDIR+"icons/zoom.png"
+Loop.IsDrawTool 	= False
 
 CurrentTool = ContLine
 
@@ -292,6 +287,8 @@ for i in DrawingToolsTable:
 	
 
 Polygon.AddProperty("AN", "Многоугольник", [3, 12])
+Polygon.AddProperty("UG", "Угол поворота", [0, 359])
+
 RoundRect.AddProperty("AN", "Радиус", [0, 128])
 
 Move.AddProperty("ST", "Перемещение", "В начало")
