@@ -48,33 +48,27 @@ class PaintZone(PaintDC):
 		self.SetPen(Pen(figure.PenColor, int(figure.BrushSize), figure.PenStyle))
 		self.SetTool(figure.Tool.Name)
 
+		argm = {
+			True:(),
+			self.Name == "Polygon": (figure.Polygons, figure.Angle),
+			self.Name == "RoundRect": figure.Radius
+		}[True]
+
 		if figure.Tool.Continious == True:
 
 			for i, v in enumerate(figure.Points):
-
+			
 				if i+1 < len(figure.Points):
-
-					if self.Name in self.DefFuncs:
-						if self.Name == "Polygon":
-							self.Func(v[0], v[1], figure.Points[i+1][0], figure.Points[i+1][1], figure.Polygons, figure.Angle)
-						elif self.Name == "RoundRect":
-							self.Func(v[0], v[1], figure.Points[i+1][0], figure.Points[i+1][1], figure.Radius)
-						else:
-							self.Func(v[0], v[1], figure.Points[i+1][0], figure.Points[i+1][1])
+			
+					if self.Name in self.DefFuncs:	
+						self.Func(v[0], v[1], figure.Points[i+1][0], figure.Points[i+1][1], *argm)
 		else:
 
 			if self.Name in self.DefFuncs:
 				mOld = figure.Points[0]
 				mNew = figure.Points[1]
 				
-				if self.Name == "Polygon":
-					self.Func(mOld[0], mOld[1], mNew[0], mNew[1], figure.Polygons, figure.Angle)
-
-				elif self.Name == "RoundRect":
-					self.Func(mOld[0], mOld[1], mNew[0], mNew[1], figure.Radius)
-
-				else:
-					self.Func(mOld[0], mOld[1], mNew[0], mNew[1])
+				self.Func(mOld[0], mOld[1], mNew[0], mNew[1], *argm)		
 
 	def DrawRect(self, ax, ay, bx, by):
 
@@ -143,37 +137,22 @@ class PaintZone(PaintDC):
 		for i in Figures:
 			for j in i.Points:
 				MinCoordX, MinCoordY = min(MinCoordX, j[0]-int(i.BrushSize/2)), min(MinCoordY, j[1]-int(i.BrushSize/2))
+				MaxCoordX, MaxCoordY = max(MaxCoordX, j[0]+int(i.BrushSize/2)), max(MaxCoordY, j[1]+int(i.BrushSize/2))
 
-		if MinCoordX >= 0:
-			MinCoordX = 0
-		else:
-			MinCoordX -= 8
-
-		if MinCoordY >= 0:
-			MinCoordY = 0
-		else:
-			MinCoordY -= 8
+		MinCoordX = 0 if MinCoordX >= 0 else MinCoordX-8
+		MinCoordY = 0 if MinCoordY >= 0 else MinCoordY-8
 
 		for i in Figures:
 			for j in i.Points:
 				j[0] = j[0]-MinCoordX
 				j[1] = j[1]-MinCoordY
 
-		for i in Figures:
-			for j in i.Points:
-				MaxCoordX, MaxCoordY = max(MaxCoordX, j[0]+int(i.BrushSize/2)), max(MaxCoordY, j[1]+int(i.BrushSize/2))
 
-		if MaxCoordX < wa+MinCoordX:
-			MaxCoordX = wa+MinCoordX
-		if MaxCoordY < ha+MinCoordY:
-			MaxCoordY = ha+MinCoordY
+		MaxCoordX = wa+MinCoordX if wa+MinCoordX > MaxCoordX else MaxCoordX
+		MaxCoordY = ha+MinCoordY if ha+MinCoordY > MaxCoordY else MaxCoordY
 
-		self.MinW, self.MinH = MaxCoordX+8, MaxCoordY+8
-
-		if self.MinW < wa:
-			self.MinW = wa
-		if self.MinH < ha:
-			self.MinH = ha
+		self.MinW = wa if MaxCoordX < wa else MaxCoordX+8
+		self.MinH = ha if MaxCoordY < ha else MaxCoordY+8
 
 		self.Parent.Move(Point(0, 0))
 		x, y = self.Parent.GetParent().GetViewStart()
