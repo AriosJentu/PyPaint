@@ -5,6 +5,7 @@ from wx import *
 Application = App(False)
 
 Colors = {
+	"Selection"	:"#D97272",
 	"Enter"		:"#393939", 
 	"Click"		:"#242424", 
 	"Default"	:"#444444",

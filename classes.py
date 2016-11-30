@@ -50,8 +50,8 @@ class PaintZone(PaintDC):
 
 		argm = {
 			True:(),
-			self.Name == "Polygon": (figure.Polygons, figure.Angle),
-			self.Name == "RoundRect": figure.Radius
+			self.Name == "Polygon": [figure.Polygons, figure.Angle],
+			self.Name == "RoundRect": [figure.Radius]
 		}[True]
 
 		if figure.Tool.Continious == True:

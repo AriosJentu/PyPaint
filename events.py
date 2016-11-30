@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 IsDrawing = False
 IsPanelMoving = False
+IsLoop = False
 
 Description = "Векторный графический редактор"
 
@@ -37,14 +38,22 @@ def OnPaint(evt):
 	Redraw()
 
 SavingClickCoords = []
-def OnPaintMouseDown(evt, typeBut):
+def OnPaintMouseDown(evt, MouseButton):
 
-	global CurrentFigure, CurrentTool, IsDrawing, SavingClickCoords, IsPanelMoving, CurrentPolygon
+	global CurrentFigure, CurrentTool, IsDrawing, IsLoop, SavingClickCoords, IsPanelMoving, CurrentPolygon, Paint
 
-	if CurrentTool.Name == "Move" or typeBut == "middle":
+	if CurrentTool.Name == "Move" or MouseButton == "middle":
 
 		IsPanelMoving = True
 		SavingClickCoords = [GetMousePosition().x, GetMousePosition().y, DrawScroller.GetViewStart().x, DrawScroller.GetViewStart().y]
+
+	elif CurrentTool.Name == "Scale":
+
+		IsLoop = True
+
+		SavingClickCoords = [evt.GetPosition().x, evt.GetPosition().y, GetMousePosition().x, GetMousePosition().y]
+
+		OnPaintMouseMove(evt)
 
 	elif CurrentTool.IsDrawTool != False:
 
@@ -58,8 +67,8 @@ def OnPaintMouseDown(evt, typeBut):
 			CurrentFigure.Points.append([evt.GetPosition().x, evt.GetPosition().y])
 
 		CurrentFigure.Tool = CurrentTool
-		CurrentFigure.PenColor = CurrentColour[0] if typeBut else CurrentColour[1]
-		CurrentFigure.BrushColor = CurrentColour[1] if typeBut else CurrentColour[0]
+		CurrentFigure.PenColor = CurrentColour[0] if MouseButton == "left" else CurrentColour[1]
+		CurrentFigure.BrushColor = CurrentColour[1] if MouseButton == "left" else CurrentColour[0]
 		CurrentFigure.BrushSize = CurrentToolSize
 		CurrentFigure.Polygons = CurrentPolygon
 		CurrentFigure.PenStyle = CurrentPenStyle
@@ -84,14 +93,16 @@ def OnPaintMouseUp(evt):
 		Redraw(True)
 
 
-
+ScalingArguments = []
 def OnPaintMouseMove(evt):
 
-	global IsDrawing, IsPanelMoving, DrawScroller
+	global IsDrawing, IsLoop, IsPanelMoving, DrawScroller, Paint
 
-	if IsDrawing == True:
+	Paint.DrawRect(100, 100, 100, 100)
 
-		global CurrentFigure, CurrentTool, SavingClickCoords
+	if IsDrawing or IsLoop:
+
+		global CurrentFigure, CurrentTool, SavingClickCoords, ScalingArguments
 
 		if CurrentTool.Continious == True:
 		
@@ -104,11 +115,30 @@ def OnPaintMouseMove(evt):
 			x, y = SavingClickCoords[0], SavingClickCoords[1]
 			w, h = evt.GetPosition().x, evt.GetPosition().y
 
-			CurrentFigure.Points[0] = [x, y]
-			CurrentFigure.Points[1] = [w, h]
-			print(x, y, w, h)
+			if CurrentFigure:
+				CurrentFigure.Points[0] = [x, y]
+				CurrentFigure.Points[1] = [w, h]
 
-		Redraw()
+			if IsLoop:
+				Redraw()
+				
+				Paint = PaintZone(DrawPanel)
+				
+				ScalingArguments = [x, y, w, h]
+
+				Paint.BeginDrawing()
+				
+				Paint.SetBrush(Brush(Colors["Selection"], CROSSDIAG_HATCH))
+				Paint.SetPen(Pen(Colors["Selection"], 1, DOT))
+				Paint.DrawRect(x, y, w, h)
+
+				Paint.EndDrawing()
+				#print(ScalingArguments)
+
+			#print(x, y, w, h)
+
+		if IsDrawing:
+			Redraw()
 
 	if IsPanelMoving == True:
 
@@ -250,24 +280,40 @@ def OnPaintChangeScale(evt, source):
 
 def OnClickScale(evt, but):
 
-	global DrawScroller, CurrentZoom
+	global DrawScroller, CurrentZoom, IsLoop, Paint, ScalingArguments
+	IsLoop = False
+
+	ax, ay, w, h = ScalingArguments
 
 	x, y = DrawScroller.GetViewStart()
 	a, b = evt.GetPosition()
 
-	dif = 10
-	PrevZoom = CurrentZoom
+	if abs(ax-w) < 10 and abs(ay-h) < 10:
+		
+		dif = 10 if but == "in" else -10
+		PrevZoom = CurrentZoom
+		Loop.GUI["LP"].SetValue( Loop.GUI["LP"].GetValue() + dif )
 
-	if but == "out":
-		dif = -10
+		x = a-x
+		y = b-y
+
+	else:
+
+		dep = float(max( float(100*Paint.MinW/abs(ax-w)), float(100*Paint.MinH/abs(ay-h)) )/100) if but == "in" else float(min( float(100*abs(ax-w)/Paint.MinW), float(100*abs(ay-h)/Paint.MinH) )/100)
 
 
-	Loop.GUI["LP"].SetValue( Loop.GUI["LP"].GetValue() + dif )
+		NewScale = int( CurrentZoom*dep )
+		NewScale = 500 if NewScale>500 else 20 if NewScale < 20 else NewScale
+		print(NewScale)
+
+		x = ax*(NewScale/CurrentZoom)
+		y = ay*(NewScale/CurrentZoom)
+
+		Loop.GUI["LP"].SetValue(NewScale)
+
 	OnPaintChangeScale(evt, Loop.GUI["LP"])
 
-	#scaler = PrevZoom/CurrentZoom if dif > 0 else CurrentZoom/PrevZoom
-
-	DrawScroller.Scroll(a-x, b-y)
+	DrawScroller.Scroll(x, y)
 
 def OnPaintDef(evt, tst):
 	global CurrentTool, Loop
@@ -290,8 +336,8 @@ FileMenu.Bind(EVT_MENU, ClearPaint, id=ID_CLEAR)
 HelpMenu.Bind(EVT_MENU, ShowAbout, id=ID_ABOUT)
 
 DrawPanel.Bind(EVT_PAINT, OnPaint)
-DrawPanel.Bind(EVT_LEFT_DOWN, lambda evt: OnPaintMouseDown(evt, True) )
-DrawPanel.Bind(EVT_RIGHT_DOWN, lambda evt: OnPaintMouseDown(evt, False) )
+DrawPanel.Bind(EVT_LEFT_DOWN, lambda evt: OnPaintMouseDown(evt, "left") )
+DrawPanel.Bind(EVT_RIGHT_DOWN, lambda evt: OnPaintMouseDown(evt, "right") )
 DrawPanel.Bind(EVT_MIDDLE_DOWN, lambda evt: OnPaintMouseDown(evt, "middle") )
 DrawPanel.Bind(EVT_LEFT_UP, lambda evt: OnPaintDef(evt, "in") )
 DrawPanel.Bind(EVT_RIGHT_UP, lambda evt: OnPaintDef(evt, "out") )
