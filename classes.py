@@ -59,16 +59,24 @@ class PaintZone(PaintDC):
 			for i, v in enumerate(figure.Points):
 			
 				if i+1 < len(figure.Points):
-			
+
 					if self.Name in self.DefFuncs:	
 						self.Func(v[0], v[1], figure.Points[i+1][0], figure.Points[i+1][1], *argm)
+
 		else:
 
 			if self.Name in self.DefFuncs:
-				mOld = figure.Points[0]
-				mNew = figure.Points[1]
-				
-				self.Func(mOld[0], mOld[1], mNew[0], mNew[1], *argm)		
+				self.Func(figure.Points[0][0], figure.Points[0][1], figure.Points[1][0], figure.Points[1][1], *argm)	
+
+
+		if figure.Selected:
+
+				self.SetBrush(Brush(Colors["Selection"], TRANSPARENT))
+				self.SetPen(Pen(Colors["Selection"], 1, SHORT_DASH))
+
+				minp, maxp = figure.GetRect() 
+
+				self.DrawRect(minp[0], minp[1], maxp[0], maxp[1])
 
 	def DrawRect(self, ax, ay, bx, by):
 
@@ -202,8 +210,23 @@ class Figure:
 		self.Angle = 0
 		self.PenStyle = SOLID
 		self.BrushStyle = TRANSPARENT
+		self.Selected = False
 
 		Figures.append(self)
+
+	def GetRect(self):
+		
+		minP, maxP = self.Points[0], self.Points[1]
+		x, y, w, h = minP[0], minP[1], maxP[0], maxP[1]
+
+		for i in self.Points:
+			x = i[0] if x > i[0] else x
+			y = i[1] if y > i[1] else y
+			w = i[0] if w < i[0] else w
+			h = i[1] if h < i[1] else h
+
+		minP, maxP = (x, y), (w, h)
+		return minP, maxP
 
 class Tool:
 
@@ -225,6 +248,10 @@ class Tool:
 ContLine 			= Tool("Pen", "Кисть")
 ContLine.Continious = True
 ContLine.Icon 		= APPDIR+"icons/brush.png"
+
+Selector			= Tool("Selection", "Выделение")
+Selector.Icon 		= APPDIR+"icons/selector.png"
+Selector.IsDrawTool = False
 
 Line 				= Tool("Line", "Линия")
 Line.Icon 			= APPDIR+"icons/line.png"
