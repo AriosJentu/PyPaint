@@ -2,8 +2,9 @@
 IsDrawing = False
 IsPanelMoving = False
 IsLoop = False
+IsSelector = False
 
-Description = "Векторный графический редактор"
+Description = "Векторный графический редактор\nПроект распространяется свободно"
 
 def OnFrameResize(evt):
 	w, h = PaintFrame.GetSize()
@@ -13,7 +14,7 @@ def OnFrameResize(evt):
 	DrawScroller.SetSize(Size(w, h))
 
 	x, y = DrawPanel.GetPosition()
-	sw, sh = Paint.MinW, Paint.MinH #DrawPanel.GetSize()
+	sw, sh = Paint.MinW, Paint.MinH
 
 	if x < w-sw: x = w-sw
 	if y < h-sh: y = h-sh
@@ -40,26 +41,28 @@ def OnPaint(evt):
 SavingClickCoords = []
 def OnPaintMouseDown(evt, MouseButton):
 
-	global CurrentFigure, CurrentTool, IsDrawing, IsLoop, SavingClickCoords, IsPanelMoving, CurrentPolygon, Paint
+	global CurrentFigure, CurrentTool, IsDrawing, IsLoop, SavingClickCoords, IsPanelMoving, CurrentPolygon, Paint, IsSelector
 
+	SavingClickCoords = [evt.GetPosition().x, evt.GetPosition().y, GetMousePosition().x, GetMousePosition().y]
+	
 	if CurrentTool.Name == "Move" or MouseButton == "middle":
 
 		IsPanelMoving = True
 		SavingClickCoords = [GetMousePosition().x, GetMousePosition().y, DrawScroller.GetViewStart().x, DrawScroller.GetViewStart().y]
+		return False
 
 	elif CurrentTool.Name == "Scale":
 
 		IsLoop = True
 
-		SavingClickCoords = [evt.GetPosition().x, evt.GetPosition().y, GetMousePosition().x, GetMousePosition().y]
+	elif CurrentTool.Name == "Selection":
 
-		OnPaintMouseMove(evt)
+		IsSelector = True		
+
 
 	elif CurrentTool.IsDrawTool != False:
 
 		IsDrawing = True
-
-		SavingClickCoords = [evt.GetPosition().x, evt.GetPosition().y, GetMousePosition().x, GetMousePosition().y]
 
 		CurrentFigure = Figure()
 		CurrentFigure.Points.append([evt.GetPosition().x, evt.GetPosition().y])
@@ -76,15 +79,16 @@ def OnPaintMouseDown(evt, MouseButton):
 		CurrentFigure.Radius = CurrentRadius
 		CurrentFigure.Angle = CurrentAngle
 
-		OnPaintMouseMove(evt)
+	OnPaintMouseMove(evt)
 
 
 def OnPaintMouseUp(evt):
 
-	global CurrentFigure, CurrentTool, IsDrawing, DrawPanel, IsPanelMoving
+	global CurrentFigure, CurrentTool, IsDrawing, DrawPanel, IsPanelMoving, IsSelector
 
 	IsDrawing = False
 	IsPanelMoving = False
+	IsSelector = False
 
 	if CurrentTool.IsDrawTool != None:
 
@@ -96,11 +100,9 @@ def OnPaintMouseUp(evt):
 ScalingArguments = []
 def OnPaintMouseMove(evt):
 
-	global IsDrawing, IsLoop, IsPanelMoving, DrawScroller, Paint
+	global IsDrawing, IsLoop, IsPanelMoving, DrawScroller, Paint, IsSelector
 
-	Paint.DrawRect(100, 100, 100, 100)
-
-	if IsDrawing or IsLoop:
+	if IsDrawing or IsLoop or IsSelector:
 
 		global CurrentFigure, CurrentTool, SavingClickCoords, ScalingArguments
 
@@ -119,7 +121,7 @@ def OnPaintMouseMove(evt):
 				CurrentFigure.Points[0] = [x, y]
 				CurrentFigure.Points[1] = [w, h]
 
-			if IsLoop:
+			if IsLoop or IsSelector:
 				Redraw()
 				
 				Paint = PaintZone(DrawPanel)
@@ -128,14 +130,15 @@ def OnPaintMouseMove(evt):
 
 				Paint.BeginDrawing()
 				
-				Paint.SetBrush(Brush(Colors["Selection"], CROSSDIAG_HATCH))
-				Paint.SetPen(Pen(Colors["Selection"], 1, DOT))
+				Paint.SetBrush(Brush(Colors["Selection"], CROSSDIAG_HATCH if IsLoop else TRANSPARENT))
+				Paint.SetPen(Pen(Colors["Selection"], 1 if IsLoop else 2, DOT if IsLoop else LONG_DASH))
 				Paint.DrawRect(x, y, w, h)
 
 				Paint.EndDrawing()
-				#print(ScalingArguments)
 
-			#print(x, y, w, h)
+				if IsSelector:
+					SelectFiguresInRange(SavingClickCoords[0], SavingClickCoords[1], evt.GetPosition().x, evt.GetPosition().y)
+
 
 		if IsDrawing:
 			Redraw()
@@ -299,12 +302,22 @@ def OnClickScale(evt, but):
 
 	else:
 
-		dep = float(max( float(100*Paint.MinW/abs(ax-w)), float(100*Paint.MinH/abs(ay-h)) )/100) if but == "in" else float(min( float(100*abs(ax-w)/Paint.MinW), float(100*abs(ay-h)/Paint.MinH) )/100)
+		dep = float(
+				max( 
+					float(100*Paint.MinW/abs(ax-w)), 
+					float(100*Paint.MinH/abs(ay-h)) 
+				)/100
+			) if but == "in" else float(
+				min( 
+					float(100*abs(ax-w)/Paint.MinW), 
+					float(100*abs(ay-h)/Paint.MinH) 
+				)/100
+			)
 
 
 		NewScale = int( CurrentZoom*dep )
 		NewScale = 500 if NewScale>500 else 20 if NewScale < 20 else NewScale
-		print(NewScale)
+		#print(NewScale)
 
 		x = ax*(NewScale/CurrentZoom)
 		y = ay*(NewScale/CurrentZoom)
@@ -322,7 +335,6 @@ def OnPaintDef(evt, tst):
 		OnClickScale(evt, tst)
 	else:
 		OnPaintMouseUp(evt)
-
 
 
 PaintFrame.Bind(EVT_SIZE, OnFrameResize)
