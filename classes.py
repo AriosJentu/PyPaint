@@ -28,31 +28,17 @@ class PaintZone(PaintDC):
 
 	def __init__(self, parent, *args, **kwar):
 		PaintDC.__init__(self, parent, *args, **kwar)
-		self.Func = self.DrawLine
 		self.Name = "Pen"
 		self.Parent = parent
 		self.MinW, self.MinH = parent.GetSize()
 		self.SavedOld = [0, 0]
 
-		self.DefFuncs = {
-			"Pen":self.DrawLine,
-			"Line":self.DrawLine,
-			"Rectangle":self.DrawRect,
-			"Ellipse":self.DrawEll,
-			"Polygon":self.DrawPoly,
-			"RoundRect":self.DrawRoundRect
-		}
-
 	def DrawFigure(self, figure):
-		self.SetBrush(Brush(figure.BrushColor, figure.BrushStyle))
+		if hasattr(figure, "BrushStyle"): 
+			self.SetBrush(Brush(figure.BrushColor, figure.BrushStyle))
+
 		self.SetPen(Pen(figure.PenColor, int(figure.BrushSize), figure.PenStyle))
 		self.SetTool(figure.Tool.Name)
-
-		argm = {
-			True:(),
-			self.Name == "Polygon": [figure.Polygons, figure.Angle],
-			self.Name == "RoundRect": [figure.Radius]
-		}[True]
 
 		if figure.Tool.Continious == True:
 
@@ -60,13 +46,10 @@ class PaintZone(PaintDC):
 			
 				if i+1 < len(figure.Points):
 
-					if self.Name in self.DefFuncs:	
-						self.Func(v[0], v[1], figure.Points[i+1][0], figure.Points[i+1][1], *argm)
+					figure.Draw(self, v[0], v[1], figure.Points[i+1][0], figure.Points[i+1][1])
 
 		else:
-
-			if self.Name in self.DefFuncs:
-				self.Func(figure.Points[0][0], figure.Points[0][1], figure.Points[1][0], figure.Points[1][1], *argm)	
+			figure.Draw(self, figure.Points[0][0], figure.Points[0][1], figure.Points[1][0], figure.Points[1][1])
 
 
 		if figure.Selected:
@@ -127,12 +110,12 @@ class PaintZone(PaintDC):
 
 	def SetTool(self, name):
 		self.Name = name
-		for i in Tools:
+		"""for i in Tools:
 			if i["name"] == name:
 				for j in self.DefFuncs.items():
 					if i["name"] == j[0]:
 						self.Func = self.DefFuncs[j[0]]
-						break
+						break"""
 
 	def CalcSizes(self):
 
@@ -202,14 +185,14 @@ class Figure:
 
 		self.Points = []
 		self.Tool = None
-		self.PenColor = None
-		self.BrushColor = None
-		self.BrushSize = None
-		self.Polygons = 3
-		self.Radius = 5
-		self.Angle = 0
 		self.PenStyle = SOLID
-		self.BrushStyle = TRANSPARENT
+		self.PenColor = None
+		self.BrushSize = None
+		#self.Polygons = 3
+		#self.Radius = 5
+		#self.Angle = 0
+		#self.BrushStyle = TRANSPARENT
+		#self.BrushColor = None
 		self.Selected = False
 
 		Figures.append(self)
@@ -228,6 +211,87 @@ class Figure:
 		minP, maxP = (x, y), (w, h)
 		return minP, maxP
 
+	def IsPointIn(self, x, y):
+
+		for i in self.Points:
+			if i[0] == x and i[1] == y:
+				return True 
+		else:
+			return False
+
+#########################################################################
+
+class RectFigure(Figure):
+	def __init__(self, *args):
+		Figure.__init__(self, *args)
+		self.BrushStyle = TRANSPARENT
+		self.BrushColor = None
+
+	def Draw(self, paint, x0, y0, x1, y1):
+		paint.DrawRect(x0, y0, x1, y1)
+
+	def IsRectIn(self, x0, y0, x1, y1):
+
+
+
+		return False
+
+class RoundRectFigure(Figure):
+
+	def __init__(self, *args):
+		Figure.__init__(self, *args)
+		self.Radius = 5
+		self.BrushStyle = TRANSPARENT
+		self.BrushColor = None
+
+	def Draw(self, paint, x0, y0, x1, y1):
+		paint.DrawRoundRect(x0, y0, x1, y1, self.Radius)
+
+	def IsRectIn(self, x0, y0, x1, y1):
+		return False
+
+class EllipseFigure(Figure):
+
+	def __init__(self, *args):
+		Figure.__init__(self, *args)
+		self.BrushStyle = TRANSPARENT
+		self.BrushColor = None
+
+	def Draw(self, paint, x0, y0, x1, y1):
+		paint.DrawEll(x0, y0, x1, y1)
+
+	def IsRectIn(self, x0, y0, x1, y1):
+		return False
+
+class LineFigure(Figure):
+
+	def __init__(self, *args):
+		Figure.__init__(self, *args)
+		self.BrushStyle = TRANSPARENT
+		self.BrushColor = None
+
+	def Draw(self, paint, x0, y0, x1, y1):
+		paint.DrawLine(x0, y0, x1, y1)
+
+	def IsRectIn(self, x0, y0, x1, y1):
+		return False
+
+class PolygonFigure(Figure):
+
+	def __init__(self, *args):
+		Figure.__init__(self, *args)
+		self.Angle = 0
+		self.Polygons = 3
+		self.BrushStyle = TRANSPARENT
+		self.BrushColor = None
+
+	def Draw(self, paint, x0, y0, x1, y1):
+		paint.DrawPoly(x0, y0, x1, y1, self.Polygons, self.Angle)
+
+	def IsRectIn(self, x0, y0, x1, y1):
+		return False
+
+#########################################################################
 class Tool:
 
 	def __init__(self, name, rname):
@@ -235,6 +299,7 @@ class Tool:
 		self.Rus = rname
 		self.Continious = False 
 		self.IsDrawTool = True
+		self.Figure = None
 		self.Icon = APPDIR+"icons/def.png"
 		self.Properties = {}
 		self.GUI = None
@@ -248,6 +313,7 @@ class Tool:
 ContLine 			= Tool("Pen", "Кисть")
 ContLine.Continious = True
 ContLine.Icon 		= APPDIR+"icons/brush.png"
+ContLine.Figure 	= LineFigure
 
 Selector			= Tool("Selection", "Выделение")
 Selector.Icon 		= APPDIR+"icons/selector.png"
@@ -255,18 +321,23 @@ Selector.IsDrawTool = False
 
 Line 				= Tool("Line", "Линия")
 Line.Icon 			= APPDIR+"icons/line.png"
+Line.Figure 		= LineFigure
 
 Rectangle			= Tool("Rectangle", "Прямоугольник")
 Rectangle.Icon		= APPDIR+"icons/rectangle.png"
+Rectangle.Figure 	= RectFigure
 
 RoundRect 			= Tool("RoundRect", "Закруглённый прямоугольник")
 RoundRect.Icon 		= APPDIR+"icons/rround.png"
+RoundRect.Figure 	= RoundRectFigure
 
 Ellipse				= Tool("Ellipse", "Эллипс")
 Ellipse.Icon		= APPDIR+"icons/ellipse.png"
+Ellipse.Figure 		= EllipseFigure
 
 Polygon				= Tool("Polygon", "Многоугольник")
 Polygon.Icon 		= APPDIR+"icons/polygon.png"
+Polygon.Figure 		= PolygonFigure
 
 Move 				= Tool("Move", "Перемещение")
 Move.Icon 			= APPDIR+"icons/move.png"

@@ -64,7 +64,7 @@ def OnPaintMouseDown(evt, MouseButton):
 
 		IsDrawing = True
 
-		CurrentFigure = Figure()
+		CurrentFigure = CurrentTool.Figure()
 		CurrentFigure.Points.append([evt.GetPosition().x, evt.GetPosition().y])
 		if CurrentTool.Continious != True:
 			CurrentFigure.Points.append([evt.GetPosition().x, evt.GetPosition().y])

@@ -137,48 +137,8 @@ def checkInRound(x, y, w, h, radW, radH, cenX, cenY):
 	except:
 		return True
 
-def SelectFiguresInRange(x, y, w, h):
-	for i in Figures:	
-	
-		x, w = min(x, w), max(x, w)
-		y, h = min(y, h), max(y, h)
-	
-		if i.Tool.Continious:
-			for j in i.Points:
-
-				if w > j[0] > x and h > j[1] > y:
-					i.Selected = True
-					break
-				else:
-					i.Selected = False
-		else:
-			
-			ax, ay, bx, by = i.Points[0][0], i.Points[0][1], i.Points[1][0], i.Points[1][1]
-
-			check1 = ( ( x <= ax <= w or x <= bx <= w ) and ( y <= ay <= h or y <= by <= h ) )
-			check2 = ( 
-				( ax <= x <= bx or ay <= y <= by ) and ( ax <= w <= bx or ay <= h <= by ) 
-			) and ( 
-				( x <= ax <= w or y <= ay <= h ) or ( x <= bx <= w or y <= by <= h ) 
-			) 
-			
-
-			if i.Tool.Name == "Rectangle":
-				
-				i.Selected = True if check1 or check2 else False
-
-			elif i.Tool.Name == "Ellipse":
-				radW = abs(ax - bx)	/ 2
-				radH = abs(ay - by)	/ 2	
-				cenX = ax+radW
-				cenY = ay+radH
-
-				check1 = (( x > ax and w < bx ) and ( y <= ay and h >= by )) or (( y > ay and h < by ) and ( x <= ax and w >= bx ))
-				check2 = checkInRound(x, y, w, h, radW, radH, cenX, cenY)
-				check3 = ( x <= ax and y <= ay and w >= bx and h >= by )
-				i.Selected = True if check1 or check3 or check2 else False
-
-			else:
-
-				i.Selected = True if check1 or check2 else False
+def SelectFiguresInRange(x0, y0, x1, y1):
+	for i in Figures:
+		ch1 = i.IsPointIn(x0, y0) or i.IsPointIn(x1, y1)
+		i.Selected = True if ch1 else False
 
