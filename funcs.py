@@ -127,18 +127,35 @@ class CustomButton(Button):
 	def onLeaveButtons(self, evt):
 		self.SetBackgroundColour(self.Color)
 
-def checkInRound(x, y, w, h, radW, radH, cenX, cenY):
-	try:
-		t1 = ( ( float(abs(w-cenX)**2)/(radW**2) + float(abs(h-cenY)**2)/(radH**2) ) < 1 )
-		t2 = ( ( float(abs(x-cenX)**2)/(radW**2) + float(abs(h-cenY)**2)/(radH**2) ) < 1 )
-		t3 = ( ( float(abs(w-cenX)**2)/(radW**2) + float(abs(y-cenY)**2)/(radH**2) ) < 1 )
-		t4 = ( ( float(abs(x-cenX)**2)/(radW**2) + float(abs(y-cenY)**2)/(radH**2) ) < 1 )
-		return t1 or t2 or t3 or t4
-	except:
-		return True
+def IsPointInEllipse(x0, y0, x1, y1, radX, radY, cenX, cenY):
+	result = False
+
+	for i in xrange(x0, x1+1, 2):
+		for j in xrange(y0, y1+1, 2):
+			if float((i-cenX)*(i-cenX))/float(radX*radX) + float((j-cenY)*(j-cenY))/float(radY*radY) <= 1.0:
+				result = True
+				break
+		if result == True:
+			break
+
+	return result
+
+def IsPointOnLine(spx, spy, epx, epy, x0, y0, x1, y1):
+	result = False
+
+	for i in xrange(spx, epx+1):
+		for j in xrange(spy, epy+1):
+			if min(x0, x1) <= i <= max(x0, x1) and min(y0, y1) <= j <= max(y0, y1):
+				if (i-x0)*(y1-y0) - (j-y0)*(x1-x0) == 0:
+					result = True
+					break
+		if result == True:
+			break
+
+	return result
 
 def SelectFiguresInRange(x0, y0, x1, y1):
 	for i in Figures:
-		ch1 = i.IsPointIn(x0, y0) or i.IsPointIn(x1, y1)
-		i.Selected = True if ch1 else False
+		check = i.IsRectIn(x0, y0, x1, y1)
+		i.Selected = True if check else False
 

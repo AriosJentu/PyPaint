@@ -211,14 +211,6 @@ class Figure:
 		minP, maxP = (x, y), (w, h)
 		return minP, maxP
 
-	def IsPointIn(self, x, y):
-
-		for i in self.Points:
-			if i[0] == x and i[1] == y:
-				return True 
-		else:
-			return False
-
 #########################################################################
 
 class RectFigure(Figure):
@@ -232,9 +224,18 @@ class RectFigure(Figure):
 
 	def IsRectIn(self, x0, y0, x1, y1):
 
+		x0, x1 = min(x0, x1), max(x0, x1)
+		y0, y1 = min(y0, y1), max(y0, y1)
+
+		result = False
+		for i in range(x0, x1+1):
+			for j in range(y0, y1+1):
+				if (self.Points[0][0] <= i <= self.Points[1][0]) and (self.Points[0][1] <= j <= self.Points[1][1]):
+					result = True
+					break
 
 
-		return False
+		return result
 
 class RoundRectFigure(Figure):
 
@@ -248,8 +249,20 @@ class RoundRectFigure(Figure):
 		paint.DrawRoundRect(x0, y0, x1, y1, self.Radius)
 
 	def IsRectIn(self, x0, y0, x1, y1):
-		return False
 
+		x0, x1 = min(x0, x1), max(x0, x1)
+		y0, y1 = min(y0, y1), max(y0, y1)
+
+		result = False
+		for i in range(x0, x1+1):
+			for j in range(y0, y1+1):
+				if (self.Points[0][0] <= i <= self.Points[1][0]) and (self.Points[0][1] <= j <= self.Points[1][1]):
+					result = True
+					break
+
+
+		return result
+		
 class EllipseFigure(Figure):
 
 	def __init__(self, *args):
@@ -261,7 +274,16 @@ class EllipseFigure(Figure):
 		paint.DrawEll(x0, y0, x1, y1)
 
 	def IsRectIn(self, x0, y0, x1, y1):
-		return False
+
+		x0, x1 = min(x0, x1), max(x0, x1)
+		y0, y1 = min(y0, y1), max(y0, y1)
+
+		radX, radY = abs(self.Points[0][0] - self.Points[1][0])/2, abs(self.Points[0][1] - self.Points[1][1])/2
+		centX, centY = min(self.Points[0][0], self.Points[1][0])+radX, min(self.Points[0][1], self.Points[1][1])+radY
+			
+		result = IsPointInEllipse(x0, y0, x1, y1, radX, radY, centX, centY)
+
+		return result
 
 class LineFigure(Figure):
 
@@ -274,7 +296,21 @@ class LineFigure(Figure):
 		paint.DrawLine(x0, y0, x1, y1)
 
 	def IsRectIn(self, x0, y0, x1, y1):
-		return False
+
+		x0, x1 = min(x0, x1), max(x0, x1)
+		y0, y1 = min(y0, y1), max(y0, y1)
+
+		result = False
+		if self.Tool.Continious:
+			for i in xrange(len(self.Points)):
+				if result != True:
+					result = x0 <= self.Points[i][0] <= x1 and y0 <= self.Points[i][1] <= y1
+				else:
+					break
+		else:
+			result = IsPointOnLine(x0, y0, x1, y1, self.Points[0][0], self.Points[0][1], self.Points[1][0], self.Points[1][1])
+
+		return result
 
 class PolygonFigure(Figure):
 
@@ -289,7 +325,19 @@ class PolygonFigure(Figure):
 		paint.DrawPoly(x0, y0, x1, y1, self.Polygons, self.Angle)
 
 	def IsRectIn(self, x0, y0, x1, y1):
-		return False
+
+		x0, x1 = min(x0, x1), max(x0, x1)
+		y0, y1 = min(y0, y1), max(y0, y1)
+
+		result = False
+		for i in range(x0, x1+1):
+			for j in range(y0, y1+1):
+				if (self.Points[0][0] <= i <= self.Points[1][0]) and (self.Points[0][1] <= j <= self.Points[1][1]):
+					result = True
+					break
+
+
+		return result
 
 #########################################################################
 class Tool:
