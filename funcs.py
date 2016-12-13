@@ -24,11 +24,12 @@ class ObjectProperties:
 		
 		color = Colors["Panel"]
 		
-		self.Panel = ScrolledWindow(parent, ID_ANY)
+		self.Parent = parent
+		self.Panel = ScrolledWindow(self.Parent, ID_ANY)
 		self.Panel.SetScrollRate(5, 5)
 		self.Panel.EnableScrolling(True, True)
 
-		self.Panel.SetSize(parent.GetSize())
+		self.Panel.SetSize(self.Parent.GetSize())
 		self.Panel.Move(Point(0, 1))
 
 		self.Panel.SetBackgroundColour(color)
@@ -39,6 +40,9 @@ class ObjectProperties:
 		Slide.AddSpacer(5)
 
 		self.PSize = 0
+		CreatePropsFromTable(self, tabOfProps)
+
+	def CreatePropsFromTable(self, tabOfProps):
 
 		for key, val in tabOfProps.items():
 
@@ -87,8 +91,6 @@ class ObjectProperties:
 
 
 				self.Property[key].SetValue(str(tab[0][0]))
-				#self.Property[key].SetBackgroundColour(color)
-				#self.Property[key].SetForegroundColour(Colour(255, 255, 255))
 
 			Slide.Add(self.Labels[key])
 			Slide.Add(self.Property[key])
@@ -106,6 +108,9 @@ class ObjectProperties:
 
 	def Visible(self, bol):
 		self.Panel.Show(bol)
+
+	def ClearProps(self):
+		self.Panel.DestroyChildren()
 
 
 class CustomButton(Button):
@@ -167,5 +172,7 @@ def SelectFiguresInRange(x0, y0, x1, y1):
 		if i.Selected:
 			tabOfSelected.append(i.Tool.Name)
 
-	print(tabOfSelected)
-	print(GetToolsMergeProps(tabOfSelected))
+		
+
+
+

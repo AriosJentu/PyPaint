@@ -23,6 +23,8 @@ CurrentAngle = 0
 CurrentBrushStyle = TRANSPARENT
 CurrentPenStyle = SOLID
 
+PaintParameters = None
+
 APPDIR = os.path.dirname(os.path.abspath(__file__))+"/"
 
 execfile(APPDIR+"funcs.py")

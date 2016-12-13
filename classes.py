@@ -110,12 +110,6 @@ class PaintZone(PaintDC):
 
 	def SetTool(self, name):
 		self.Name = name
-		"""for i in Tools:
-			if i["name"] == name:
-				for j in self.DefFuncs.items():
-					if i["name"] == j[0]:
-						self.Func = self.DefFuncs[j[0]]
-						break"""
 
 	def CalcSizes(self):
 

@@ -56,7 +56,6 @@ Paint.Clear()
 
 PaintButtons = []
 CurrentProperty = None
-PaintParameters = None
 
 n = len(Tools)+1
 n = int(n/2)+1 if int(n/2) <= n/2 else int(n/2)
@@ -163,10 +162,10 @@ class PaintButton:
 
 		self.But.SetToolTip(ToolTip(self.Tool.Rus))
 
-		self.Property = ObjectProperties(PaintParameters, self.Tool.Properties)
-		self.Property.Visible(False if CurrentTool != self.Tool else True)
+		self.PropList = ObjectProperties(PaintParameters, self.Tool.Properties)
+		self.PropList.Visible(False if CurrentTool != self.Tool else True)
 
-		self.Tool.GUI = self.Property.Property
+		self.Tool.GUI = self.PropList.Property
 
 	def onEnterButtons(self, evt):
 		self.But.SetBackgroundColour(Colors["Enter"])
@@ -188,12 +187,12 @@ class PaintButton:
 
 		for j in PaintButtons:
 			j.But.SetBackgroundColour(Colors["Default"])
-			j.Property.Visible(False)
+			j.PropList.Visible(False)
 
 		self.But.SetBackgroundColour(Colors["Click"])
 
-		CurrentProperty = self.Property
-		self.Property.Visible(True)
+		CurrentProperty = self.PropList
+		self.PropList.Visible(True)
 
 
 
