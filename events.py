@@ -157,12 +157,19 @@ def OnPaintMouseMove(evt):
 			DrawScroller.Scroll(newX, newY)
 
 def OnPenPropertyBrushSize(evt):
-	global ContLine, CurrentToolSize, DrawingToolsTable
+	global ContLine, CurrentToolSize, DrawingToolsTable, Figures
 
 	CurrentToolSize = CurrentTool.GUI["BS"].GetValue()
 
 	for i in DrawingToolsTable:
 		i.GUI["BS"].SetValue(CurrentToolSize)
+
+	for i in Figures:
+		if i.Selected:
+			i.BrushSize = CurrentToolSize
+
+	Redraw()
+
 
 def Redraw(isCalcSizes = False):
 	Paint = PaintZone(DrawPanel)
@@ -178,16 +185,34 @@ def Redraw(isCalcSizes = False):
 	Paint.EndDrawing()
 
 def ChangePolygons(evt):
-	global CurrentPolygon
+	global CurrentPolygon, Figures
 	CurrentPolygon = int(Polygon.GUI["AN"].GetValue())
 
+	for i in Figures:
+		if i.Selected:
+			i.Polygons = CurrentPolygon
+
+	Redraw()
+
 def ChangeAngle(evt):
-	global CurrentAngle
+	global CurrentAngle, Figures
 	CurrentAngle = int(Polygon.GUI["UG"].GetValue())
 
+	for i in Figures:
+		if i.Selected:
+			i.Angle = CurrentAngle
+
+	Redraw()
+
 def ChangeRadius(evt):
-	global CurrentRadius
+	global CurrentRadius, Figures
 	CurrentRadius = int(RoundRect.GUI["AN"].GetValue())
+
+	for i in Figures:
+		if i.Selected:
+			i.Radius = CurrentRadius
+
+	Redraw()
 
 def AtStart(evt):
 	global DrawScroller
@@ -230,7 +255,7 @@ def ShowAbout(evt):
 
 def OnSelectPenStyle(evt):
 
-	global PenStyles, CurrentPenStyle, DrawingToolsTable
+	global PenStyles, CurrentPenStyle, DrawingToolsTable, Figures
 
 	string = evt.GetString()
 	string = string.encode("utf-8")
@@ -244,9 +269,15 @@ def OnSelectPenStyle(evt):
 	for i in DrawingToolsTable:
 		i.GUI["SP"].SetValue(string)
 
+	for i in Figures:
+		if i.Selected:
+			i.PenStyle = CurrentPenStyle
+
+	Redraw()
+
 def OnSelectBrushStyle(evt):
 
-	global BrushStyles, CurrentBrushStyle, DrawingToolsTable, ContLine, Line
+	global BrushStyles, CurrentBrushStyle, DrawingToolsTable, ContLine, Line, Figures
 
 	string = evt.GetString()
 	string = string.encode("utf-8")
@@ -258,6 +289,12 @@ def OnSelectBrushStyle(evt):
 	for i in DrawingToolsTable:
 		if i != ContLine and i != Line:
 			i.GUI["SB"].SetValue(string)
+
+	for i in Figures:
+		if i.Selected:
+			i.BrushStyle = CurrentBrushStyle
+
+	Redraw()
 
 def OnPaintChangeScale(evt, source):
 

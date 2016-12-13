@@ -188,11 +188,6 @@ class Figure:
 		self.PenStyle = SOLID
 		self.PenColor = None
 		self.BrushSize = None
-		#self.Polygons = 3
-		#self.Radius = 5
-		#self.Angle = 0
-		#self.BrushStyle = TRANSPARENT
-		#self.BrushColor = None
 		self.Selected = False
 
 		Figures.append(self)
@@ -262,7 +257,7 @@ class RoundRectFigure(Figure):
 
 
 		return result
-		
+
 class EllipseFigure(Figure):
 
 	def __init__(self, *args):
@@ -340,6 +335,9 @@ class PolygonFigure(Figure):
 		return result
 
 #########################################################################
+
+PropList = {}
+
 class Tool:
 
 	def __init__(self, name, rname):
@@ -356,7 +354,24 @@ class Tool:
 
 	def AddProperty(self, name, rus, tableOfVariaties, tableOfImages = []):
 		self.Properties[name] = [tableOfVariaties, rus, tableOfImages]
+		PropList[name] = [tableOfVariaties, rus, tableOfImages]
 
+#########################################################################
+
+def GetToolsMergeProps(*toolsname):
+	global PropList
+
+	props = PropList
+
+	for i in Tools:
+		if i["name"] in toolsname:
+			for j, _ in PropList.items():
+				if not i.Properties.get(j) and props.get(j):
+					del props[j]
+
+	return props
+
+#########################################################################
 
 ContLine 			= Tool("Pen", "Кисть")
 ContLine.Continious = True

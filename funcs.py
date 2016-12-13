@@ -104,7 +104,6 @@ class ObjectProperties:
 			self.Labels[v].Move(Point(7, (i*55)+5))
 			self.Property[v].Move(Point(7, (i*55)+25))
 
-
 	def Visible(self, bol):
 		self.Panel.Show(bol)
 
@@ -132,7 +131,12 @@ def IsPointInEllipse(x0, y0, x1, y1, radX, radY, cenX, cenY):
 
 	for i in xrange(x0, x1+1, 2):
 		for j in xrange(y0, y1+1, 2):
-			if float((i-cenX)*(i-cenX))/float(radX*radX) + float((j-cenY)*(j-cenY))/float(radY*radY) <= 1.0:
+			x = float((i-cenX)*(i-cenX))
+			f = float(radX*radX) 
+			y = float((j-cenY)*(j-cenY))
+			g = float(radY*radY)
+			if x*g - f*g + y*f <= 0:
+			#if float((i-cenX)*(i-cenX))/float(radX*radX) + float((j-cenY)*(j-cenY))/float(radY*radY) <= 1.0:
 				result = True
 				break
 		if result == True:
@@ -155,7 +159,13 @@ def IsPointOnLine(spx, spy, epx, epy, x0, y0, x1, y1):
 	return result
 
 def SelectFiguresInRange(x0, y0, x1, y1):
+	tabOfSelected = []
 	for i in Figures:
 		check = i.IsRectIn(x0, y0, x1, y1)
 		i.Selected = True if check else False
+		
+		if i.Selected:
+			tabOfSelected.append(i.Tool.Name)
 
+	print(tabOfSelected)
+	print(GetToolsMergeProps(tabOfSelected))

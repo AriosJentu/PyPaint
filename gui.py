@@ -106,9 +106,7 @@ def OnColorClick(evt):
 	global SavingColours
 	source = evt.GetEventObject()
 
-	idd = 0
-	if source == ColorBar[1]:
-		idd = 1
+	idd = 1 if source == ColorBar[1] else 0
 
 	colBar = ColorBox(PaintFrame, source.GetBackgroundColour())
 
@@ -124,6 +122,14 @@ def OnColorClick(evt):
 		for i in xrange(16):
 			r, g, b = data.GetCustomColour(i)
 			SavingColours[i] = "#"+ToHEX(r, g, b)
+
+		for i in Figures:
+			if i.Selected:
+				if idd == 0:
+					i.PenColor = col
+				else:
+					i.BrushColor = col
+		Redraw()
 
 		colBar.Destroy()
 
