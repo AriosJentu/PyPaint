@@ -261,16 +261,16 @@ class EllipseFigure(Figure):
 
 	def Draw(self, paint, x0, y0, x1, y1):
 		paint.DrawEll(x0, y0, x1, y1)
-		self.Pols = polygon(x0, y0, x1, y1, 30, 0)
 
 	def IsRectIn(self, x0, y0, x1, y1):
 
 		x0, x1 = min(x0, x1), max(x0, x1)
 		y0, y1 = min(y0, y1), max(y0, y1)
 		ax, ay, bx, by = self.Points[0][0], self.Points[0][1], self.Points[1][0], self.Points[1][1]
+		Pols = polygon(x0, y0, x1, y1, 30, 0)
 
 		s1 = sympy.Polygon((x0, y0), (x1, y0), (x1, y1), (x0, y1))
-		s2 = sympy.Polygon(*self.Pols)
+		s2 = sympy.Polygon(*Pols)
 
 		nc = x0 <= ax and y0 <= ay and x1 >= bx and y1 >= by
 
@@ -314,16 +314,16 @@ class PolygonFigure(Figure):
 
 	def Draw(self, paint, x0, y0, x1, y1):
 		paint.DrawPoly(x0, y0, x1, y1, self.EdgeCount, self.Angle)
-		self.Pols = polygon(x0, y0, x1, y1, self.EdgeCount, self.Angle)
 
 	def IsRectIn(self, x0, y0, x1, y1):
 
 		x0, x1 = min(x0, x1), max(x0, x1)
 		y0, y1 = min(y0, y1), max(y0, y1)
 		ax, ay, bx, by = self.Points[0][0], self.Points[0][1], self.Points[1][0], self.Points[1][1]
-
+		Pols = polygon(x0, y0, x1, y1, self.EdgeCount, self.Angle)
+		
 		s1 = sympy.Polygon((x0, y0), (x1, y0), (x1, y1), (x0, y1))
-		s2 = sympy.Polygon(*self.Pols)
+		s2 = sympy.Polygon(*Pols)
 
 		nc = x0 <= ax and y0 <= ay and x1 >= bx and y1 >= by
 

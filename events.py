@@ -243,17 +243,27 @@ def OnQuit(evt):
 		exit()
 
 def Undo(evt):
-	global Figures
+	global Figures, IsFileChanged
 
 	if len(Figures) > 0:
 		del Figures[len(Figures)-1]
 		Redraw(True)
 
+	IsFileChanged = True
+	Title = PaintFrame.GetTitle()
+	if Title[0] != "*":
+		PaintFrame.SetTitle("*"+Title)
+
 def ClearPaint(evt):
-	global Figures
+	global Figures, IsFileChanged
 
 	Figures = []
 	Redraw(True)
+
+	IsFileChanged = True
+	Title = PaintFrame.GetTitle()
+	if Title[0] != "*":
+		PaintFrame.SetTitle("*"+Title)
 
 def ShowAbout(evt):
 
