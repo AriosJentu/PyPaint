@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+WorkingDirectory = ""
+
 IsDrawing = False
 IsPanelMoving = False
 IsLoop = False
@@ -31,7 +33,7 @@ def OnFrameResize(evt):
 	x, y = PaintParameters.GetPosition()
 	PaintParameters.SetSize(Size(114, h-y))
 	for but in PaintButtons:
-		but.Property.Panel.SetSize(Size(114, h-y))
+		but.PropList.Panel.SetSize(Size(114, h-y))
 
 
 def OnPaint(evt):
@@ -69,26 +71,30 @@ def OnPaintMouseDown(evt, MouseButton):
 		if CurrentTool.Continious != True:
 			CurrentFigure.Points.append([evt.GetPosition().x, evt.GetPosition().y])
 
-		CurrentFigure.Tool = CurrentTool
 		CurrentFigure.PenColor = CurrentColour[0] if MouseButton == "left" else CurrentColour[1]
 		CurrentFigure.BrushColor = CurrentColour[1] if MouseButton == "left" else CurrentColour[0]
 		CurrentFigure.BrushSize = CurrentToolSize
-		CurrentFigure.Polygons = CurrentPolygon
+		CurrentFigure.EdgeCount = CurrentPolygon
 		CurrentFigure.PenStyle = CurrentPenStyle
 		CurrentFigure.BrushStyle = CurrentBrushStyle
 		CurrentFigure.Radius = CurrentRadius
 		CurrentFigure.Angle = CurrentAngle
+		CurrentFigure.Continious = CurrentTool.Continious
 
 	OnPaintMouseMove(evt)
 
 
 def OnPaintMouseUp(evt):
 
-	global CurrentFigure, CurrentTool, IsDrawing, DrawPanel, IsPanelMoving, IsSelector
+	global CurrentFigure, CurrentTool, IsDrawing, IsPanelMoving, IsSelector, IsFileChanged, PaintFrame
 
 	IsDrawing = False
 	IsPanelMoving = False
 	IsSelector = False
+	IsFileChanged = True
+	Title = PaintFrame.GetTitle()
+	if Title[0] != "*":
+		PaintFrame.SetTitle("*"+Title)
 
 	if CurrentTool.IsDrawTool != None:
 
@@ -190,7 +196,7 @@ def ChangePolygons(evt):
 
 	for i in Figures:
 		if i.Selected:
-			i.Polygons = CurrentPolygon
+			i.EdgeCount = CurrentPolygon
 
 	Redraw()
 
@@ -220,12 +226,21 @@ def AtStart(evt):
 
 def OnQuit(evt):
 
-	dialog = MessageDialog(None, "Действительно желаете закрыть это приложение?", "Выход", YES_NO)
+	if IsFileChanged:
+		dialog = MessageDialog(None, "Есть несохранённые данные.\nСохранить?", "Выход", YES_NO | CANCEL | ICON_QUESTION)
+		x = dialog.ShowModal()
 
-	if dialog.ShowModal() == ID_YES:
-		exit()
-	else:
+		if x == ID_NO:
+			exit()
+		elif x == ID_YES:
+			SavingFile(evt, False)
+			exit()
+		else:
+			return False
+
 		dialog.Destroy()
+	else:
+		exit()
 
 def Undo(evt):
 	global Figures
@@ -373,6 +388,59 @@ def OnPaintDef(evt, tst):
 	else:
 		OnPaintMouseUp(evt)
 
+def Name(dialog):
+	global PaintFrame, WorkingDirectory
+	
+	fName = dialog.GetFilename()
+	
+	if fName[-4:].find(".") == -1:
+		fName = fName+".ajp"
+
+	PaintFrame.SetTitle("["+str(fName)+"] Графический редактор")
+	WorkingDirectory = dialog.GetDirectory()+"/"+fName
+
+def SavingFile(evt, isSavingAs):
+	global PaintFrame, WorkingDirectory, IsFileChanged
+
+	if WorkingDirectory == "":
+		isSavingAs = True
+
+	if isSavingAs:
+		saveDial = FileDialog(PaintFrame, "Сохранение файла", "", "", "PyPaint Vector Image (*.ajp)|*.ajp", FD_SAVE | FD_OVERWRITE_PROMPT)
+
+		if saveDial.ShowModal() != ID_CANCEL:
+			
+			Name(saveDial)
+			saveFile(WorkingDirectory)
+			IsFileChanged = False
+			Title = PaintFrame.GetTitle()
+			if Title[0] == "*":
+				PaintFrame.SetTitle(Title[1:])
+	
+		saveDial.Destroy()
+
+	else:
+		saveFile(WorkingDirectory)
+		IsFileChanged = False
+		Title = PaintFrame.GetTitle()
+		if Title[0] == "*":
+			PaintFrame.SetTitle(Title[1:])
+
+def OpeningFile(evt):
+	global PaintFrame, WorkingDirectory, Paint
+	
+	openDial = FileDialog(PaintFrame, "Открытие файла", "", "", "PyPaint Vector Image (*.ajp, *ppv)|*.ajp;*.ppv", FD_OPEN)
+
+	if openDial.ShowModal() != ID_CANCEL:
+		
+		Name(openDial)		
+		openFile(WorkingDirectory)
+
+	openDial.Destroy()
+
+	#Paint.Clear()
+	Redraw()
+
 
 PaintFrame.Bind(EVT_SIZE, OnFrameResize)
 PaintFrame.Bind(EVT_CLOSE, OnQuit)
@@ -381,6 +449,9 @@ FileMenu.Bind(EVT_MENU, OnQuit, id=ID_EXIT)
 FileMenu.Bind(EVT_MENU, Undo, id=ID_UNDO)
 FileMenu.Bind(EVT_MENU, Redraw, id=ID_REDRAW)
 FileMenu.Bind(EVT_MENU, ClearPaint, id=ID_CLEAR)
+FileMenu.Bind(EVT_MENU, OpeningFile, id=ID_OPEN)
+FileMenu.Bind(EVT_MENU, lambda evt: SavingFile(evt, False), id=ID_SAVE)
+FileMenu.Bind(EVT_MENU, lambda evt: SavingFile(evt, True), id=ID_SAVEAS)
 
 HelpMenu.Bind(EVT_MENU, ShowAbout, id=ID_ABOUT)
 

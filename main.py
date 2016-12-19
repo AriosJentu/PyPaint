@@ -1,5 +1,11 @@
 # -*- encoding: utf-8 -*-
 import os
+import sympy
+
+import sys
+ClassList = sys.modules.get('__main__')
+Signature = "PyPaintAriJen"
+
 from wx import *
 
 Application = App(False)
@@ -24,11 +30,13 @@ CurrentBrushStyle = TRANSPARENT
 CurrentPenStyle = SOLID
 
 PaintParameters = None
+IsFileChanged = False
 
 APPDIR = os.path.dirname(os.path.abspath(__file__))+"/"
 
 execfile(APPDIR+"funcs.py")
 execfile(APPDIR+"classes.py")
+execfile(APPDIR+"saving.py")
 execfile(APPDIR+"gui.py")
 execfile(APPDIR+"events.py")
 

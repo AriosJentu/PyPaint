@@ -38,9 +38,9 @@ class PaintZone(PaintDC):
 			self.SetBrush(Brush(figure.BrushColor, figure.BrushStyle))
 
 		self.SetPen(Pen(figure.PenColor, int(figure.BrushSize), figure.PenStyle))
-		self.SetTool(figure.Tool.Name)
+		#self.SetTool(figure.Tool.Name)
 
-		if figure.Tool.Continious == True:
+		if figure.Continious == True:
 
 			for i, v in enumerate(figure.Points):
 			
@@ -59,7 +59,7 @@ class PaintZone(PaintDC):
 
 				minp, maxp = figure.GetRect() 
 
-				self.DrawRect(minp[0], minp[1], maxp[0], maxp[1])
+				self.DrawRect(minp[0]-2, minp[1]-2, maxp[0]+2, maxp[1]+2)
 
 	def DrawRect(self, ax, ay, bx, by):
 
@@ -86,7 +86,6 @@ class PaintZone(PaintDC):
 
 		x, y = min(ax, bx), min(ay, by)
 		w, h = abs(ax-bx), abs(ay-by)
-		minR = max(w, h)
 
 		if numOfAngles < 3:
 			numOfAngles = 3
@@ -178,31 +177,32 @@ class Figure:
 	def __init__(self):
 
 		self.Points = []
-		self.Tool = None
 		self.PenStyle = SOLID
 		self.PenColor = None
 		self.BrushSize = None
 		self.Selected = False
+		self.Continious = False
 
 		Figures.append(self)
 
 	def GetRect(self):
 		
 		minP, maxP = self.Points[0], self.Points[1]
-		x, y, w, h = minP[0], minP[1], maxP[0], maxP[1]
+		x0, y0, x1, y1 = minP[0], minP[1], maxP[0], maxP[1]
 
 		for i in self.Points:
-			x = i[0] if x > i[0] else x
-			y = i[1] if y > i[1] else y
-			w = i[0] if w < i[0] else w
-			h = i[1] if h < i[1] else h
+			x0 = i[0] if x0 > i[0] else x0
+			y0 = i[1] if y0 > i[1] else y0
+			x1 = i[0] if x1 < i[0] else x1
+			y1 = i[1] if y1 < i[1] else y1
 
-		minP, maxP = (x, y), (w, h)
+		minP, maxP = (x0, y0), (x1, y1)
 		return minP, maxP
 
 #########################################################################
 
 class RectFigure(Figure):
+
 	def __init__(self, *args):
 		Figure.__init__(self, *args)
 		self.BrushStyle = TRANSPARENT
@@ -215,16 +215,16 @@ class RectFigure(Figure):
 
 		x0, x1 = min(x0, x1), max(x0, x1)
 		y0, y1 = min(y0, y1), max(y0, y1)
+		ax, ay, bx, by = self.Points[0][0], self.Points[0][1], self.Points[1][0], self.Points[1][1]
 
-		result = False
-		for i in range(x0, x1+1):
-			for j in range(y0, y1+1):
-				if (self.Points[0][0] <= i <= self.Points[1][0]) and (self.Points[0][1] <= j <= self.Points[1][1]):
-					result = True
-					break
+		s1 = sympy.Polygon((x0, y0), (x1, y0), (x1, y1), (x0, y1))
+		s2 = sympy.Polygon((ax, ay), (bx, ay), (bx, by), (ax, by))
 
+		nc = x0 <= ax and y0 <= ay and x1 >= bx and y1 >= by
 
-		return result
+		result = nc or sympy.intersection(s1, s2)
+
+		return True if result else False
 
 class RoundRectFigure(Figure):
 
@@ -241,16 +241,16 @@ class RoundRectFigure(Figure):
 
 		x0, x1 = min(x0, x1), max(x0, x1)
 		y0, y1 = min(y0, y1), max(y0, y1)
+		ax, ay, bx, by = self.Points[0][0], self.Points[0][1], self.Points[1][0], self.Points[1][1]
+		
+		s1 = sympy.Polygon((x0, y0), (x1, y0), (x1, y1), (x0, y1))
+		s2 = sympy.Polygon((ax, ay), (bx, ay), (bx, by), (ax, by))
 
-		result = False
-		for i in range(x0, x1+1):
-			for j in range(y0, y1+1):
-				if (self.Points[0][0] <= i <= self.Points[1][0]) and (self.Points[0][1] <= j <= self.Points[1][1]):
-					result = True
-					break
+		nc = x0 <= ax and y0 <= ay and x1 >= bx and y1 >= by
 
+		result = nc or sympy.intersection(s1, s2)
 
-		return result
+		return True if result else False
 
 class EllipseFigure(Figure):
 
@@ -261,18 +261,22 @@ class EllipseFigure(Figure):
 
 	def Draw(self, paint, x0, y0, x1, y1):
 		paint.DrawEll(x0, y0, x1, y1)
+		self.Pols = polygon(x0, y0, x1, y1, 30, 0)
 
 	def IsRectIn(self, x0, y0, x1, y1):
 
 		x0, x1 = min(x0, x1), max(x0, x1)
 		y0, y1 = min(y0, y1), max(y0, y1)
+		ax, ay, bx, by = self.Points[0][0], self.Points[0][1], self.Points[1][0], self.Points[1][1]
 
-		radX, radY = abs(self.Points[0][0] - self.Points[1][0])/2, abs(self.Points[0][1] - self.Points[1][1])/2
-		centX, centY = min(self.Points[0][0], self.Points[1][0])+radX, min(self.Points[0][1], self.Points[1][1])+radY
-			
-		result = IsPointInEllipse(x0, y0, x1, y1, radX, radY, centX, centY)
+		s1 = sympy.Polygon((x0, y0), (x1, y0), (x1, y1), (x0, y1))
+		s2 = sympy.Polygon(*self.Pols)
 
-		return result
+		nc = x0 <= ax and y0 <= ay and x1 >= bx and y1 >= by
+
+		result = nc or sympy.intersection(s1, s2)
+
+		return True if result else False
 
 class LineFigure(Figure):
 
@@ -288,45 +292,44 @@ class LineFigure(Figure):
 
 		x0, x1 = min(x0, x1), max(x0, x1)
 		y0, y1 = min(y0, y1), max(y0, y1)
+		ax, ay, bx, by = self.Points[0][0], self.Points[0][1], self.Points[1][0], self.Points[1][1]
+		
+		s1 = sympy.Polygon((x0, y0), (x1, y0), (x1, y1), (x0, y1))
+		s2 = sympy.Segment((ax, ay), (bx, by))
+		
+		nc = x0 <= ax and y0 <= ay and x1 >= bx and y1 >= by
 
-		result = False
-		if self.Tool.Continious:
-			for i in xrange(len(self.Points)):
-				if result != True:
-					result = x0 <= self.Points[i][0] <= x1 and y0 <= self.Points[i][1] <= y1
-				else:
-					break
-		else:
-			result = IsPointOnLine(x0, y0, x1, y1, self.Points[0][0], self.Points[0][1], self.Points[1][0], self.Points[1][1])
+		result = nc or sympy.intersection(s1, s2)
 
-		return result
+		return True if result else False
 
 class PolygonFigure(Figure):
 
 	def __init__(self, *args):
 		Figure.__init__(self, *args)
 		self.Angle = 0
-		self.Polygons = 3
+		self.EdgeCount = 3
 		self.BrushStyle = TRANSPARENT
 		self.BrushColor = None
 
 	def Draw(self, paint, x0, y0, x1, y1):
-		paint.DrawPoly(x0, y0, x1, y1, self.Polygons, self.Angle)
+		paint.DrawPoly(x0, y0, x1, y1, self.EdgeCount, self.Angle)
+		self.Pols = polygon(x0, y0, x1, y1, self.EdgeCount, self.Angle)
 
 	def IsRectIn(self, x0, y0, x1, y1):
 
 		x0, x1 = min(x0, x1), max(x0, x1)
 		y0, y1 = min(y0, y1), max(y0, y1)
+		ax, ay, bx, by = self.Points[0][0], self.Points[0][1], self.Points[1][0], self.Points[1][1]
 
-		result = False
-		for i in range(x0, x1+1):
-			for j in range(y0, y1+1):
-				if (self.Points[0][0] <= i <= self.Points[1][0]) and (self.Points[0][1] <= j <= self.Points[1][1]):
-					result = True
-					break
+		s1 = sympy.Polygon((x0, y0), (x1, y0), (x1, y1), (x0, y1))
+		s2 = sympy.Polygon(*self.Pols)
 
+		nc = x0 <= ax and y0 <= ay and x1 >= bx and y1 >= by
 
-		return result
+		result = nc or sympy.intersection(s1, s2)
+
+		return True if result else False
 
 #########################################################################
 
@@ -346,9 +349,9 @@ class Tool:
 
 		Tools.append({"name":name, "tool":self})
 
-	def AddProperty(self, name, rus, tableOfVariaties, tableOfImages = []):
-		self.Properties[name] = [tableOfVariaties, rus, tableOfImages]
-		PropList[name] = [tableOfVariaties, rus, tableOfImages]
+	def AddProperty(self, name, rus, tabOfProps, tableOfImages = []):
+		self.Properties[name] = [tabOfProps, rus, tableOfImages]
+		PropList[name] = [tabOfProps, rus, tableOfImages]
 
 #########################################################################
 

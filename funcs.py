@@ -22,7 +22,7 @@ class ObjectProperties:
 
 	def __init__(self, parent, tabOfProps):
 		
-		color = Colors["Panel"]
+		self.color = Colors["Panel"]
 		
 		self.Parent = parent
 		self.Panel = ScrolledWindow(self.Parent, ID_ANY)
@@ -32,15 +32,15 @@ class ObjectProperties:
 		self.Panel.SetSize(self.Parent.GetSize())
 		self.Panel.Move(Point(0, 1))
 
-		self.Panel.SetBackgroundColour(color)
+		self.Panel.SetBackgroundColour(self.color)
 
 		self.Property = {}
 		self.Labels = {}
-		Slide = BoxSizer(VERTICAL)
-		Slide.AddSpacer(5)
+		self.Slide = BoxSizer(VERTICAL)
+		self.Slide.AddSpacer(5)
 
 		self.PSize = 0
-		CreatePropsFromTable(self, tabOfProps)
+		self.CreatePropsFromTable(tabOfProps)
 
 	def CreatePropsFromTable(self, tabOfProps):
 
@@ -63,14 +63,14 @@ class ObjectProperties:
 			if types == "spin":
 				self.Property[key] = SpinCtrl(self.Panel, ID_ANY, size=(100,30))
 				self.Property[key].SetRange(int(min(val[0])), int(max(val[0])))
-				self.Property[key].SetBackgroundColour(color)
+				self.Property[key].SetBackgroundColour(self.color)
 				self.Property[key].SetForegroundColour(Colour(255, 255, 255))
 
 			elif types == "btn":
 
 				self.Property[key] = CustomButton(self.Panel, ID_ANY, str(val[0]), size=(100, 30))
-				self.Property[key].Color = color
-				self.Property[key].SetBackgroundColour(color)
+				self.Property[key].Color = self.color
+				self.Property[key].SetBackgroundColour(self.color)
 			
 			else:
 				self.Property[key] = BitmapComboBox(self.Panel, ID_ANY, style=CB_READONLY, size=(100,30))
@@ -92,14 +92,14 @@ class ObjectProperties:
 
 				self.Property[key].SetValue(str(tab[0][0]))
 
-			Slide.Add(self.Labels[key])
-			Slide.Add(self.Property[key])
-			Slide.AddSpacer(5)
+			self.Slide.Add(self.Labels[key])
+			self.Slide.Add(self.Property[key])
+			self.Slide.AddSpacer(5)
 
 			self.PSize += 55
 
 		
-		self.Panel.SetSizer(Slide)
+		self.Panel.SetSizer(self.Slide)
 		self.Panel.FitInside()
 
 		for i, v in enumerate(self.Property):
@@ -131,48 +131,28 @@ class CustomButton(Button):
 	def onLeaveButtons(self, evt):
 		self.SetBackgroundColour(self.Color)
 
-def IsPointInEllipse(x0, y0, x1, y1, radX, radY, cenX, cenY):
-	result = False
-
-	for i in xrange(x0, x1+1, 2):
-		for j in xrange(y0, y1+1, 2):
-			x = float((i-cenX)*(i-cenX))
-			f = float(radX*radX) 
-			y = float((j-cenY)*(j-cenY))
-			g = float(radY*radY)
-			if x*g - f*g + y*f <= 0:
-			#if float((i-cenX)*(i-cenX))/float(radX*radX) + float((j-cenY)*(j-cenY))/float(radY*radY) <= 1.0:
-				result = True
-				break
-		if result == True:
-			break
-
-	return result
-
-def IsPointOnLine(spx, spy, epx, epy, x0, y0, x1, y1):
-	result = False
-
-	for i in xrange(spx, epx+1):
-		for j in xrange(spy, epy+1):
-			if min(x0, x1) <= i <= max(x0, x1) and min(y0, y1) <= j <= max(y0, y1):
-				if (i-x0)*(y1-y0) - (j-y0)*(x1-x0) == 0:
-					result = True
-					break
-		if result == True:
-			break
-
-	return result
-
 def SelectFiguresInRange(x0, y0, x1, y1):
 	tabOfSelected = []
 	for i in Figures:
-		check = i.IsRectIn(x0, y0, x1, y1)
-		i.Selected = True if check else False
+		i.Selected = i.IsRectIn(x0, y0, x1, y1)
 		
 		if i.Selected:
 			tabOfSelected.append(i.Tool.Name)
 
+def polygon(x0, y0, x1, y1, count=3, ang=0):
+	result = []
+
+	radiusW = x1/2
+	radiusH = y1/2
 		
+	angle = (2*math.pi/count)
+	x, y = x0+radiusW, y0+radiusH
+	
+	for i in xrange(count):
+			
+		fx = radiusW*math.cos(angle*i+math.radians(ang))
+		fy = radiusH*math.sin(angle*i+math.radians(ang))
+			
+		result.append([x+fx, y+fy])
 
-
-
+	return result
