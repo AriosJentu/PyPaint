@@ -224,22 +224,27 @@ def AtStart(evt):
 	global DrawScroller
 	DrawScroller.Scroll(0, 0)
 
-def OnQuit(evt):
+def ShowSaveDialog(evt, func):
+	global IsFileChanged	
 
 	if IsFileChanged:
 		dialog = MessageDialog(None, "Есть несохранённые данные.\nСохранить?", "Выход", YES_NO | CANCEL | ICON_QUESTION)
 		x = dialog.ShowModal()
 
 		if x == ID_NO:
-			exit()
+			func()
 		elif x == ID_YES:
 			SavingFile(evt, False)
-			exit()
+			func()
 		else:
 			return False
 
 		dialog.Destroy()
-	else:
+
+def OnQuit(evt):
+
+	x = ShowSaveDialog(evt, exit)
+	if x != False: 
 		exit()
 
 def Undo(evt):
@@ -439,17 +444,31 @@ def SavingFile(evt, isSavingAs):
 def OpeningFile(evt):
 	global PaintFrame, WorkingDirectory, Paint
 	
-	openDial = FileDialog(PaintFrame, "Открытие файла", "", "", "PyPaint Vector Image (*.ajp, *ppv)|*.ajp;*.ppv", FD_OPEN)
+	def open():
+		openDial = FileDialog(PaintFrame, "Открытие файла", "", "", "PyPaint Vector Image (*.ajp, *ppv)|*.ajp;*.ppv", FD_OPEN)
 
-	if openDial.ShowModal() != ID_CANCEL:
-		
-		Name(openDial)		
-		openFile(WorkingDirectory)
+		if openDial.ShowModal() != ID_CANCEL:
+			
+			Name(openDial)		
+			openFile(WorkingDirectory)
 
-	openDial.Destroy()
+		openDial.Destroy()
 
-	#Paint.Clear()
-	Redraw()
+		#Paint.Clear()
+		Redraw()
+
+	ShowSaveDialog(evt, open)
+
+def CreateNewFile(evt):
+	global PaintFrame, WorkingDirectory, IsFileChanged
+
+	def create():
+		ClearPaint(evt)
+		PaintFrame.SetTitle("Графический редактор")
+		IsFileChanged = False
+		WorkingDirectory = ""
+
+	ShowSaveDialog(evt, create)
 
 
 PaintFrame.Bind(EVT_SIZE, OnFrameResize)
@@ -462,6 +481,7 @@ FileMenu.Bind(EVT_MENU, ClearPaint, id=ID_CLEAR)
 FileMenu.Bind(EVT_MENU, OpeningFile, id=ID_OPEN)
 FileMenu.Bind(EVT_MENU, lambda evt: SavingFile(evt, False), id=ID_SAVE)
 FileMenu.Bind(EVT_MENU, lambda evt: SavingFile(evt, True), id=ID_SAVEAS)
+FileMenu.Bind(EVT_MENU, CreateNewFile, id=ID_NEW)
 
 HelpMenu.Bind(EVT_MENU, ShowAbout, id=ID_ABOUT)
 

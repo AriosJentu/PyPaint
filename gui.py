@@ -14,10 +14,11 @@ PaintFrame.SetIcon(Icon(iconDir))
 #Меню
 PaintMenu = MenuBar()
 
-ID_UNDO, ID_REDRAW, ID_CLEAR, ID_EXIT, ID_OPEN, ID_SAVE, ID_SAVEAS = 100, 101, 102, 103, 104, 105, 106
+ID_UNDO, ID_REDRAW, ID_CLEAR, ID_EXIT, ID_OPEN, ID_SAVE, ID_SAVEAS, ID_NEW = 100, 101, 102, 103, 104, 105, 106, 107
 ID_ABOUT = 200
 
 FileMenu = Menu()
+FileMenu.Append(ID_NEW, "Создать")
 FileMenu.Append(ID_OPEN, "Открыть")
 FileMenu.Append(ID_SAVE, "Сохранить")
 FileMenu.Append(ID_SAVEAS, "Сохранить как")

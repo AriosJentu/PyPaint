@@ -86,8 +86,8 @@ def openFile(dirs):
 			inputText = inputText[thisClassEnd+4:]
 			thisClassEnd = inputText.find("$end")
 
-			if thisClassEnd == -1:
-				break
+			#if thisClassEnd == -1:
+			#	break
 
 		className = inputText[classNameStart:classNameEnd]
 
@@ -104,7 +104,7 @@ def openFile(dirs):
 			thisAttributeName = allThisClass[thisAttrNameStart:thisAttrNameEnd]
 			thisAttributeValue = allThisClass[thisAttrNameEnd+2:thisAttrFinish-1]
 
-			if thisAttrNameStart != 1 and thisAttrNameEnd != -1 and thisAttrFinish != 0 and (thisAttrNameStart < thisAttrNameEnd < thisAttrFinish) and allThisClass[:thisAttrFinish].find("\n") == -1:
+			if thisAttrNameStart != 1 and thisAttrNameEnd != -1 and thisAttrFinish != 0 and (thisAttrNameStart < thisAttrNameEnd < thisAttrFinish) and allThisClass[thisAttrNameStart:thisAttrFinish].find("\n") == -1:
 				classAttributes[thisAttributeName] = thisAttributeValue
 				allThisClass = allThisClass[thisAttrFinish:]
 			else:
@@ -120,8 +120,8 @@ def openFile(dirs):
 		#print("###############################")
 		#print(inputText)
 		#print("###############################")
-		print(className)
-		print(classAttributes)
+		#print(className)
+		#print(classAttributes)
 		#print(" ")
 		
 		inst = getattr(ClassList, className)
@@ -131,12 +131,12 @@ def openFile(dirs):
 			return
 
 		figClass = inst()
-		print(figClass.Continious)
+		#print(figClass.Continious)
 
 		for i, v in classAttributes.items():
 
 			if hasattr(figClass, i):
-				
+
 				if v == "True" or v == "False":
 					
 					v = True if v == "True" else False
