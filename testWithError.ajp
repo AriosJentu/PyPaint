@@ -1,0 +1,129 @@
+@PyPaintAriJen
+
+$LineFigure:
+- Angle: 0;
+- BrushColor: #FFFFFF;
+- BrushSize: 1
+- BrushStyle: 106;
+- Continious: True;
+- EdgeCount: 3;
+- PenColor: #000000;
+- PenStyle: 100;
+- Points: [[97, 201], [97, 201], [98, 195], [101, 183], [106, 167], [113, 147], [122, 129], [131, 112], [141, 95], [150, 82], [161, 73], [170, 66], [181, 60], [189, 57], [192, 57], [195, 57], [197, 60], [199, 65], [200, 73], [200, 85], [200, 98], [200, 115], [200, 136], [202, 159], [204, 179], [208, 199], [213, 216], [221, 231], [230, 242], [241, 251], [253, 255], [265, 256], [277, 255], [292, 250], [307, 242], [319, 229], [332, 214], [344, 197], [352, 177], [355, 156], [357, 137], [357, 122], [354, 107], [350, 98], [347, 93], [345, 90], [342, 88], [341, 89], [340, 92], [339, 97], [338, 103], [337, 110], [337, 117], [337, 125], [338, 136], [340, 144], [340, 150], [341, 158], [341, 164]];
+- Radius: 5;
+- Selected: False;
+$end
+
+$LineFigure:
+- Angle: 0;
+- BrushColor: #FFFFFF;
+- BrushSize: 1;
+- BrushStyle: 106;
+- Continious: True;
+- EdgeCount: 3;
+- PenColor: #000000;
+- PenStyle: 100;
+- Points: [[198, 393], [198, 393], [204, 382], [211, 370], [219, 357], [226, 345], [234, 339], [239, 334], [240, 333], [242, 331], [237, 334], [207, 339], [191, 349], [185, 365], [185, 377], [190, 394], [199, 408], [211, 418], [230, 426], [253, 430], [280, 430], [314, 426], [344, 418], [370, 406], [390, 392], [406, 376], [414, 360], [414, 344], [409, 329], [396, 314], [378, 304], [356, 296], [332, 290], [306, 288], [286, 288], [266, 290], [254, 296], [247, 300], [243, 305], [243, 308], [248, 315], [263, 324], [289, 336], [321, 348], [357, 358]];
+- Radius: 5;
+- Selected: False;
+$end
+
+$RectFigure:
+- Angle: 0;
+- BrushColor: #FFFFFF;
+- BrushSize: 1;
+- BrushStyle: 106;
+- Continious: False;
+- EdgeCount: 3;
+- PenColor: #000000;
+- PenStyle: 100;
+- Points: [[242, 57], [320, 184]];
+- Radius: 5;
+- Selected: False;
+$end
+
+$EllipseFigure:
+- Angle: 0;
+- BrushColor: #FFFFFF;
+- BrushSize: 1;
+- BrushStyle: 106;
+- Continious: False;
+- EdgeCount: 3;
+- PenColor: #000000;
+- PenStyle: 100;
+- Points: [[99, 228], [472, 515]];
+- Radius: 5;
+- Selected: False;
+$end
+
+$PolygonFigure:
+- Angle: 0;
+- BrushColor: #FFFFFF;
+- BrushSize: 1;
+- BrushStyle: 106;
+- Continious: False;
+- EdgeCount: 3;
+- PenColor: #000000;
+- PenStyle: 100;
+- Points: [[356, 79], [586, 299]];
+- Radius: 5;
+- Selected: False;
+$end
+
+$PolygonFigure:
+- Angle: 25;
+- BrushColor: #ff0000;
+- BrushSize: 5;
+- BrushStyle: 112;
+- Continious: False;
+- EdgeCount: 11;
+- PenColor: #b300c0;
+- PenStyle: 101;
+- Points: [[174, 281], [489, 544]];
+- Radius: 5;
+- Selected: False;
+$end
+
+$PolygonFigure:
+- Angle: 25;
+- BrushColor: #ff0000;
+- BrushSize: 5;
+- BrushStyle: 112;
+- Continious: False;
+- EdgeCount: 11;
+- PenColor: #b300c0;
+- PenStyle: 101;
+- Points: [[225, 265], [46, 55]];
+- Radius: 5;
+- Selected: False;
+$end
+
+$EllipseFigure:
+- Angle: 25;
+- BrushColor: #ff0000;
+- BrushSize: 5;
+- BrushStyle: 112;
+- Continious: False;
+- EdgeCount: 11;
+- PenColor: #b300c0;
+- PenStyle: 101;
+- Points: [[256, 37], [568, 285]];
+- Radius: 5;
+- Selected: False;
+$end
+
+$LineFigure:
+- Angle: 117;
+- BrushColor: #FFFFFF;
+- BrushSize: 9;
+- BrushStyle: 106;
+- Continious: True;
+- EdgeCount: 5;
+- PenColor: #000000;
+- PenStyle: 100;
+- Points: [[26, 68], [26, 68], [25, 67], [25, 66], [25, 65], [25, 64], [25, 63], [25, 62], [25, 54], [25, 48], [25, 42], [27, 37], [28, 35], [30, 33], [30, 33], [31, 33], [31, 33], [31, 33], [31, 34], [31, 34], [31, 36], [31, 39], [31, 41], [32, 44], [32, 48], [32, 52], [33, 60], [34, 63], [34, 65], [35, 65], [35, 65], [36, 65], [38, 65], [40, 65], [46, 63], [50, 61], [54, 58], [57, 54], [59, 52], [60, 51], [60, 50]];
+- Radius: 5;
+- Selected: False;
+$end
+
+@Finish

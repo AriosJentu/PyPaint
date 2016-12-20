@@ -18,6 +18,8 @@ $end
 """
 #Signature = "PyPaintAriJen"
 
+import inspect
+
 def isNumber(txt):
 	try:
 		if str(type(int(txt))).find("int") != -1:
@@ -66,7 +68,6 @@ def openFile(dirs):
 
 	if fileStart == -1 or fileEnd == -1:
 		MessageDialog(None, "Ошибка загрузки файла:\nНе найдены сигнатуры", "Ошибка", OK | ICON_ERROR).ShowModal()
-		#print("Не найдены сигнатуры")
 		return False
 
 	inputText = inputText[fileStart:fileEnd+7]
@@ -103,7 +104,7 @@ def openFile(dirs):
 			thisAttributeName = allThisClass[thisAttrNameStart:thisAttrNameEnd]
 			thisAttributeValue = allThisClass[thisAttrNameEnd+2:thisAttrFinish-1]
 
-			if thisAttrNameStart != 1 and thisAttrNameEnd != -1 and thisAttrFinish != 0 and (thisAttrNameStart < thisAttrNameEnd < thisAttrFinish):
+			if thisAttrNameStart != 1 and thisAttrNameEnd != -1 and thisAttrFinish != 0 and (thisAttrNameStart < thisAttrNameEnd < thisAttrFinish) and allThisClass[:thisAttrFinish].find("\n") == -1:
 				classAttributes[thisAttributeName] = thisAttributeValue
 				allThisClass = allThisClass[thisAttrFinish:]
 			else:
@@ -119,33 +120,41 @@ def openFile(dirs):
 		#print("###############################")
 		#print(inputText)
 		#print("###############################")
-		#print(className)
-		#print(classAttributes)
+		print(className)
+		print(classAttributes)
 		#print(" ")
 		
 		inst = getattr(ClassList, className)
+		
+		if not inspect.isclass(inst):
+			IsAnyErrors = True
+			return
+
 		figClass = inst()
+		print(figClass.Continious)
+
 		for i, v in classAttributes.items():
 
-			if v == "True" or v == "False":
+			if hasattr(figClass, i):
 				
-				v = True if v == "True" else False
+				if v == "True" or v == "False":
+					
+					v = True if v == "True" else False
 
-			elif v.find("[") != -1:
+				elif v.find("[") != -1:
+					
+					v = v.replace("[", "").replace("]", "")
+					x = [int(k) for k in v.split(", ")]
+					v = []				
+					for j in range(0, len(x), 2):
+						v.append([ x[j], x[j+1] ])
 				
-				v = v.replace("[", "").replace("]", "")
-				x = [int(k) for k in v.split(", ")]
-				v = []				
-				for j in range(0, len(x), 2):
-					v.append([ x[j], x[j+1] ])
-			
-			elif isNumber(v):
-			
-				v = int(v)
-			
-			#print(i, v)
-
-			setattr(figClass, i, v)
+				elif isNumber(v):
+				
+					v = int(v)
+				
+				#print(i, v)
+				setattr(figClass, i, v)
 
 	if IsAnyErrors:
 		MessageDialog(None, "В процессе загрузки произошли ошибки\nВозможно не все данные будут отображены\nна экране", "Ошибка", OK | ICON_ERROR).ShowModal()

@@ -178,8 +178,8 @@ class Figure:
 
 		self.Points = []
 		self.PenStyle = SOLID
-		self.PenColor = None
-		self.BrushSize = None
+		self.PenColor = "#000000"
+		self.BrushSize = 1
 		self.Selected = False
 		self.Continious = False
 
@@ -206,7 +206,7 @@ class RectFigure(Figure):
 	def __init__(self, *args):
 		Figure.__init__(self, *args)
 		self.BrushStyle = TRANSPARENT
-		self.BrushColor = None
+		self.BrushColor = "#FFFFFF"
 
 	def Draw(self, paint, x0, y0, x1, y1):
 		paint.DrawRect(x0, y0, x1, y1)
@@ -232,7 +232,7 @@ class RoundRectFigure(Figure):
 		Figure.__init__(self, *args)
 		self.Radius = 5
 		self.BrushStyle = TRANSPARENT
-		self.BrushColor = None
+		self.BrushColor = "#FFFFFF"
 
 	def Draw(self, paint, x0, y0, x1, y1):
 		paint.DrawRoundRect(x0, y0, x1, y1, self.Radius)
@@ -257,7 +257,7 @@ class EllipseFigure(Figure):
 	def __init__(self, *args):
 		Figure.__init__(self, *args)
 		self.BrushStyle = TRANSPARENT
-		self.BrushColor = None
+		self.BrushColor = "#FFFFFF"
 
 	def Draw(self, paint, x0, y0, x1, y1):
 		paint.DrawEll(x0, y0, x1, y1)
@@ -283,7 +283,7 @@ class LineFigure(Figure):
 	def __init__(self, *args):
 		Figure.__init__(self, *args)
 		self.BrushStyle = TRANSPARENT
-		self.BrushColor = None
+		self.BrushColor = "#FFFFFF"
 
 	def Draw(self, paint, x0, y0, x1, y1):
 		paint.DrawLine(x0, y0, x1, y1)
@@ -310,7 +310,7 @@ class PolygonFigure(Figure):
 		self.Angle = 0
 		self.EdgeCount = 3
 		self.BrushStyle = TRANSPARENT
-		self.BrushColor = None
+		self.BrushColor = "#FFFFFF"
 
 	def Draw(self, paint, x0, y0, x1, y1):
 		paint.DrawPoly(x0, y0, x1, y1, self.EdgeCount, self.Angle)
