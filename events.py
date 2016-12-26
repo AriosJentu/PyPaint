@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 WorkingDirectory = ""
+ThisDirectory = ""
 
 IsDrawing = False
 IsPanelMoving = False
@@ -7,6 +8,20 @@ IsLoop = False
 IsSelector = False
 
 Description = "Векторный графический редактор\nПроект распространяется свободно"
+
+def StarInTitle(Visible):
+	global IsFileChanged, PaintFrame
+
+	IsFileChanged = bool(Visible)
+	Title = PaintFrame.GetTitle()
+
+	if Visible:
+		if Title[0] != "*":
+			PaintFrame.SetTitle("*"+Title)
+	else:
+		if Title[0] == "*":
+			PaintFrame.SetTitle(Title[1:])
+
 
 def OnFrameResize(evt):
 	w, h = PaintFrame.GetSize()
@@ -86,15 +101,12 @@ def OnPaintMouseDown(evt, MouseButton):
 
 def OnPaintMouseUp(evt):
 
-	global CurrentFigure, CurrentTool, IsDrawing, IsPanelMoving, IsSelector, IsFileChanged, PaintFrame
+	global CurrentFigure, CurrentTool, IsDrawing, IsPanelMoving, IsSelector, PaintFrame
 
 	IsDrawing = False
 	IsPanelMoving = False
 	IsSelector = False
-	IsFileChanged = True
-	Title = PaintFrame.GetTitle()
-	if Title[0] != "*":
-		PaintFrame.SetTitle("*"+Title)
+	StarInTitle(True)
 
 	if CurrentTool.IsDrawTool != None:
 
@@ -241,6 +253,9 @@ def ShowSaveDialog(evt, func):
 
 		dialog.Destroy()
 
+	else:
+		func()
+
 def OnQuit(evt):
 
 	x = ShowSaveDialog(evt, exit)
@@ -248,27 +263,21 @@ def OnQuit(evt):
 		exit()
 
 def Undo(evt):
-	global Figures, IsFileChanged
+	global Figures
 
 	if len(Figures) > 0:
 		del Figures[len(Figures)-1]
 		Redraw(True)
 
-	IsFileChanged = True
-	Title = PaintFrame.GetTitle()
-	if Title[0] != "*":
-		PaintFrame.SetTitle("*"+Title)
+	StarInTitle(True)
 
 def ClearPaint(evt):
-	global Figures, IsFileChanged
+	global Figures
 
 	Figures = []
 	Redraw(True)
 
-	IsFileChanged = True
-	Title = PaintFrame.GetTitle()
-	if Title[0] != "*":
-		PaintFrame.SetTitle("*"+Title)
+	StarInTitle(True)
 
 def ShowAbout(evt):
 
@@ -404,48 +413,45 @@ def OnPaintDef(evt, tst):
 		OnPaintMouseUp(evt)
 
 def Name(dialog):
-	global PaintFrame, WorkingDirectory
+	global PaintFrame, WorkingDirectory, ThisDirectory
 	
 	fName = dialog.GetFilename()
 	
-	if fName[-4:].find(".") == -1:
+	if fName.rfind(".") == -1:
 		fName = fName+".ajp"
 
 	PaintFrame.SetTitle("["+str(fName)+"] Графический редактор")
-	WorkingDirectory = dialog.GetDirectory()+"/"+fName
+	ThisDirectory = dialog.GetDirectory()+"/"
+	WorkingDirectory = ThisDirectory+fName
 
 def SavingFile(evt, isSavingAs):
-	global PaintFrame, WorkingDirectory, IsFileChanged
+	global PaintFrame, WorkingDirectory, ThisDirectory
 
 	if WorkingDirectory == "":
 		isSavingAs = True
 
 	if isSavingAs:
-		saveDial = FileDialog(PaintFrame, "Сохранение файла", "", "", "PyPaint Vector Image (*.ajp)|*.ajp", FD_SAVE | FD_OVERWRITE_PROMPT)
+		saveDial = FileDialog(PaintFrame, "Сохранение файла", ThisDirectory, "", "PyPaint Vector Image (*.ajp)|*.ajp", FD_SAVE | FD_OVERWRITE_PROMPT)
 
 		if saveDial.ShowModal() != ID_CANCEL:
 			
 			Name(saveDial)
 			saveFile(WorkingDirectory)
-			IsFileChanged = False
-			Title = PaintFrame.GetTitle()
-			if Title[0] == "*":
-				PaintFrame.SetTitle(Title[1:])
+			StarInTitle(False)			
 	
 		saveDial.Destroy()
 
 	else:
 		saveFile(WorkingDirectory)
-		IsFileChanged = False
-		Title = PaintFrame.GetTitle()
-		if Title[0] == "*":
-			PaintFrame.SetTitle(Title[1:])
+		StarInTitle(False)
 
 def OpeningFile(evt):
 	global PaintFrame, WorkingDirectory, Paint
 	
-	def open():
-		openDial = FileDialog(PaintFrame, "Открытие файла", "", "", "PyPaint Vector Image (*.ajp, *ppv)|*.ajp;*.ppv", FD_OPEN)
+	def opend():
+		global IsFileChanged, ThisDirectory
+
+		openDial = FileDialog(PaintFrame, "Открытие файла", ThisDirectory, "", "PyPaint Vector Image (*.ajp, *ppv)|*.ajp;*.ppv", FD_OPEN)
 
 		if openDial.ShowModal() != ID_CANCEL:
 			
@@ -454,15 +460,19 @@ def OpeningFile(evt):
 
 		openDial.Destroy()
 
+		IsFileChanged = False
+
 		#Paint.Clear()
 		Redraw()
 
-	ShowSaveDialog(evt, open)
+	ShowSaveDialog(evt, opend)
 
 def CreateNewFile(evt):
-	global PaintFrame, WorkingDirectory, IsFileChanged
+	global PaintFrame
 
 	def create():
+		global IsFileChanged, WorkingDirectory
+
 		ClearPaint(evt)
 		PaintFrame.SetTitle("Графический редактор")
 		IsFileChanged = False

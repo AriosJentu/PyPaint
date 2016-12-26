@@ -22,10 +22,8 @@ import inspect
 
 def isNumber(txt):
 	try:
-		if str(type(int(txt))).find("int") != -1:
-			return True
-		else:
-			return False
+		int(txt)
+		return True
 	except:
 		return False
 
@@ -43,9 +41,7 @@ def saveFile(dirs):
 		#print(tabOfAttributes)
 		
 		for j in tabOfAttributes:
-			attr = j
-			attrval = getattr(i, j)
-			output += "- "+attr+": "+str(attrval)+";\n"
+			output += "- "+j+": "+str(getattr(i, j))+";\n"
 
 		output += "$end"
 
