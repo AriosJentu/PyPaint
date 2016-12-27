@@ -132,12 +132,12 @@ class CustomButton(Button):
 		self.SetBackgroundColour(self.Color)
 
 def SelectFiguresInRange(x0, y0, x1, y1):
-	tabOfSelected = []
+	#tabOfSelected = []
 	for i in Figures:
 		i.Selected = i.IsRectIn(x0, y0, x1, y1)
 		
-		if i.Selected:
-			tabOfSelected.append(i.Tool.Name)
+		#if i.Selected:
+		#	tabOfSelected.append(i.Tool.Name)
 
 def polygon(x0, y0, x1, y1, count=3, ang=0):
 	result = []

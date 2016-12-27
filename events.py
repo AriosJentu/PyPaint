@@ -7,7 +7,62 @@ IsPanelMoving = False
 IsLoop = False
 IsSelector = False
 
+MAXEVENTS = 10
+EventsLog = [False for i in range(MAXEVENTS)]
+ThisEvent = 0
+
 Description = "Векторный графический редактор\nПроект распространяется свободно"
+EventsLog[0] = list(Figures)
+print(EventsLog)
+
+def AddEvent(figs):
+	global EventsLog, ThisEvent, MAXEVENTS, Figures
+
+	RedoItem.Enable(False)
+	UndoItem.Enable(True)
+
+	ThisEvent += 1
+
+	if ThisEvent > MAXEVENTS-1:
+		ThisEvent = MAXEVENTS-1
+		for i in range(ThisEvent):
+			EventsLog[i] = EventsLog[i+1]
+	
+	for i in range(ThisEvent, MAXEVENTS):
+		EventsLog[i] = False
+
+	EventsLog[ThisEvent] = list(figs)
+	print(EventsLog)
+
+def UndoEvent(e):
+	global ThisEvent
+	ExecuteEvent(ThisEvent-1)
+
+def RedoEvent(e):
+	global ThisEvent
+	ExecuteEvent(ThisEvent+1)
+
+def ExecuteEvent(number):
+	global EventsLog, ThisEvent, MAXEVENTS, Figures
+
+	ThisEvent = number
+
+	RedoItem.Enable(True)
+	UndoItem.Enable(True)
+
+	if ThisEvent >= MAXEVENTS-1 or EventsLog[ThisEvent+1] == False:
+		ThisEvent = (MAXEVENTS-1)-(EventsLog.count(False))
+		RedoItem.Enable(False)
+	
+	if ThisEvent <= 0:
+		ThisEvent = 0		
+		UndoItem.Enable(False)
+
+	print(ThisEvent)
+	if 0 <= ThisEvent <= MAXEVENTS-1:
+		Figures = EventsLog[ThisEvent]
+		Redraw()
+
 
 def StarInTitle(Visible):
 	global IsFileChanged, PaintFrame
@@ -101,7 +156,7 @@ def OnPaintMouseDown(evt, MouseButton):
 
 def OnPaintMouseUp(evt):
 
-	global CurrentFigure, CurrentTool, IsDrawing, IsPanelMoving, IsSelector, PaintFrame
+	global CurrentFigure, CurrentTool, IsDrawing, IsPanelMoving, IsSelector
 
 	IsDrawing = False
 	IsPanelMoving = False
@@ -109,6 +164,8 @@ def OnPaintMouseUp(evt):
 	StarInTitle(True)
 
 	if CurrentTool.IsDrawTool != None:
+
+		AddEvent(Figures)
 
 		CurrentFigure = None
 
@@ -206,9 +263,14 @@ def ChangePolygons(evt):
 	global CurrentPolygon, Figures
 	CurrentPolygon = int(Polygon.GUI["AN"].GetValue())
 
+	AnySelected = False
 	for i in Figures:
 		if i.Selected:
+			AnySelected = True
 			i.EdgeCount = CurrentPolygon
+
+	if AnySelected:	
+		AddEvent(Figures)
 
 	Redraw()
 
@@ -216,9 +278,14 @@ def ChangeAngle(evt):
 	global CurrentAngle, Figures
 	CurrentAngle = int(Polygon.GUI["UG"].GetValue())
 
+	AnySelected = False
 	for i in Figures:
 		if i.Selected:
+			AnySelected = True
 			i.Angle = CurrentAngle
+
+	if AnySelected:
+		AddEvent(Figures)
 
 	Redraw()
 
@@ -226,9 +293,14 @@ def ChangeRadius(evt):
 	global CurrentRadius, Figures
 	CurrentRadius = int(RoundRect.GUI["AN"].GetValue())
 
+	AnySelected = False
 	for i in Figures:
 		if i.Selected:
+			AnySelected = True
 			i.Radius = CurrentRadius
+
+	if AnySelected:
+		AddEvent(Figures)
 
 	Redraw()
 
@@ -274,6 +346,8 @@ def Undo(evt):
 def ClearPaint(evt):
 	global Figures
 
+	AddEvent(Figures)
+
 	Figures = []
 	Redraw(True)
 
@@ -308,9 +382,14 @@ def OnSelectPenStyle(evt):
 	for i in DrawingToolsTable:
 		i.GUI["SP"].SetValue(string)
 
+	AnySelected = False
 	for i in Figures:
 		if i.Selected:
+			AnySelected = True
 			i.PenStyle = CurrentPenStyle
+
+	if AnySelected:	
+		AddEvent(Figures)
 
 	Redraw()
 
@@ -329,9 +408,14 @@ def OnSelectBrushStyle(evt):
 		if i != ContLine and i != Line:
 			i.GUI["SB"].SetValue(string)
 
+	AnySelected = False
 	for i in Figures:
 		if i.Selected:
+			AnySelected = True
 			i.BrushStyle = CurrentBrushStyle
+
+	if AnySelected:
+		AddEvent(Figures)
 
 	Redraw()
 
@@ -485,7 +569,8 @@ PaintFrame.Bind(EVT_SIZE, OnFrameResize)
 PaintFrame.Bind(EVT_CLOSE, OnQuit)
 
 FileMenu.Bind(EVT_MENU, OnQuit, id=ID_EXIT)
-FileMenu.Bind(EVT_MENU, Undo, id=ID_UNDO)
+FileMenu.Bind(EVT_MENU, UndoEvent, id=ID_UNDO)
+FileMenu.Bind(EVT_MENU,	RedoEvent, id=ID_REDO)
 FileMenu.Bind(EVT_MENU, Redraw, id=ID_REDRAW)
 FileMenu.Bind(EVT_MENU, ClearPaint, id=ID_CLEAR)
 FileMenu.Bind(EVT_MENU, OpeningFile, id=ID_OPEN)

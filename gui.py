@@ -14,7 +14,7 @@ PaintFrame.SetIcon(Icon(iconDir))
 #Меню
 PaintMenu = MenuBar()
 
-ID_UNDO, ID_REDRAW, ID_CLEAR, ID_EXIT, ID_OPEN, ID_SAVE, ID_SAVEAS, ID_NEW = 100, 101, 102, 103, 104, 105, 106, 107
+ID_UNDO, ID_REDO, ID_REDRAW, ID_CLEAR, ID_EXIT, ID_OPEN, ID_SAVE, ID_SAVEAS, ID_NEW = 100, 101, 102, 103, 104, 105, 106, 107, 108
 ID_ABOUT = 200
 
 FileMenu = Menu()
@@ -23,7 +23,9 @@ FileMenu.Append(ID_OPEN, "Открыть")
 FileMenu.Append(ID_SAVE, "Сохранить")
 FileMenu.Append(ID_SAVEAS, "Сохранить как")
 FileMenu.AppendSeparator()
-FileMenu.Append(ID_UNDO, "Отменить")
+UndoItem = FileMenu.Append(ID_UNDO, "Отменить")
+RedoItem = FileMenu.Append(ID_REDO, "Повторить")
+FileMenu.AppendSeparator()
 FileMenu.Append(ID_REDRAW, "Перерисовать")
 FileMenu.Append(ID_CLEAR, "Очистить")
 FileMenu.AppendSeparator()
@@ -34,6 +36,8 @@ HelpMenu.Append(ID_ABOUT, "О программе")
 
 PaintMenu.Append(FileMenu, "Файл")
 PaintMenu.Append(HelpMenu, "Помощь")
+UndoItem.Enable(False)
+RedoItem.Enable(False)
 
 PaintFrame.SetMenuBar(PaintMenu)
 
