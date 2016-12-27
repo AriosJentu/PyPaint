@@ -7,16 +7,17 @@ IsPanelMoving = False
 IsLoop = False
 IsSelector = False
 
-MAXEVENTS = 10
+MAXEVENTS = 100
 EventsLog = [False for i in range(MAXEVENTS)]
 ThisEvent = 0
+SavingPosition = 0
 
 Description = "Векторный графический редактор\nПроект распространяется свободно"
 EventsLog[0] = list(Figures)
 print(EventsLog)
 
 def AddEvent(figs):
-	global EventsLog, ThisEvent, MAXEVENTS, Figures
+	global EventsLog, ThisEvent, MAXEVENTS, Figures, SavingPosition
 
 	RedoItem.Enable(False)
 	UndoItem.Enable(True)
@@ -27,7 +28,10 @@ def AddEvent(figs):
 		ThisEvent = MAXEVENTS-1
 		for i in range(ThisEvent):
 			EventsLog[i] = EventsLog[i+1]
-	
+
+	if ThisEvent < SavingPosition:
+		SavingPosition = -1
+
 	for i in range(ThisEvent, MAXEVENTS):
 		EventsLog[i] = False
 
@@ -57,6 +61,8 @@ def ExecuteEvent(number):
 	if ThisEvent <= 0:
 		ThisEvent = 0		
 		UndoItem.Enable(False)
+
+	StarInTitle(not (ThisEvent == SavingPosition))
 
 	print(ThisEvent)
 	if 0 <= ThisEvent <= MAXEVENTS-1:
@@ -509,7 +515,7 @@ def Name(dialog):
 	WorkingDirectory = ThisDirectory+fName
 
 def SavingFile(evt, isSavingAs):
-	global PaintFrame, WorkingDirectory, ThisDirectory
+	global PaintFrame, WorkingDirectory, ThisDirectory, SavingPosition, ThisEvent
 
 	if WorkingDirectory == "":
 		isSavingAs = True
@@ -519,13 +525,16 @@ def SavingFile(evt, isSavingAs):
 
 		if saveDial.ShowModal() != ID_CANCEL:
 			
+			SavingPosition = ThisEvent	
 			Name(saveDial)
 			saveFile(WorkingDirectory)
-			StarInTitle(False)			
+			StarInTitle(False)		
 	
 		saveDial.Destroy()
 
 	else:
+
+		SavingPosition = ThisEvent
 		saveFile(WorkingDirectory)
 		StarInTitle(False)
 
@@ -541,10 +550,9 @@ def OpeningFile(evt):
 			
 			Name(openDial)		
 			openFile(WorkingDirectory)
+			IsFileChanged = False
 
 		openDial.Destroy()
-
-		IsFileChanged = False
 
 		#Paint.Clear()
 		Redraw()
